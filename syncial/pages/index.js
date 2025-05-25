@@ -66,8 +66,9 @@ export default function LandingPage() {
           <div className="py-24"></div>
         </motion.div>
       </section>
-
-      {/* FEATURES */}
+      <hr className="bg-rose-400 border-0" style={{ height: '0.5px' }} />    
+      
+        {/* FEATURES */}
       <section id="features" className="px-8 md:px-24 py-20 ">
         <h2 className="text-4xl font-bold text-center mb-16">Features</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
@@ -114,16 +115,16 @@ export default function LandingPage() {
       </section>
 
       {/* CTA */}
-      <section id="start" className="flex flex-col items-center justify-center py-20 text-white">
+      {/* <section id="start" className="flex flex-col items-center justify-center py-20 text-white">
         <h2 className="text-4xl font-bold mb-6">Ready to Shape the Future?</h2>
         <Link href="#" className="px-10 py-5 bg-black hover:bg-gray-800 rounded-full text-lg font-semibold transition">
           Get Started Now
         </Link>
-      </section>
+      </section> */}
 
       {/* FOOTER */}
       <footer className="text-center text-gray-400 text-sm py-10 ">
-        © {new Date().getFullYear()} Syncial. All rights reserved.
+        © {new Date().getFullYear()} Syncial.co All rights reserved.
       </footer>
     </div>
   );

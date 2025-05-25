@@ -12,10 +12,10 @@ export default function LandingPage() {
       {/* NAVBAR */}
       <nav className="flex justify-between items-center px-8 md:px-24 py-6 bg-black">
         <h1 className="text-3xl font-extrabold tracking-tight">Syncial</h1>
-        <div className="space-x-6 text-lg">
-          <Link href="#features" className="hover:text-blue-400 transition">Features</Link>
-          <Link href="#how-it-works" className="hover:text-blue-400 transition">How It Works</Link>
-          <Link href="#start" className="hover:text-blue-400 transition">Get Started</Link>
+        <div className="space-x-6 text-md">
+          {/* <Link href="#features" className="hover:text-blue-400 transition">Features</Link>
+          <Link href="#how-it-works" className="hover:text-blue-400 transition">How It Works</Link> */}
+          <Link href="#start" className="hover:text-rose-400 hover:outline-2 transition outline-1 outline-rose-400 rounded-md px-4 py-2 text-rose-300 font-semibold">Launch App</Link>
         </div>
       </nav>
 
@@ -38,10 +38,10 @@ export default function LandingPage() {
           transition={{ duration: 0.8 }}
           className="relative z-10 max-w-2xl"
         >
-          <h2 className="text-5xl md:text-6xl font-bold leading-tight text-white font-sans">Predictions can Earn</h2>
+          <h2 className="text-5xl md:text-6xl font-bold leading-tight text-white font-sans">Polls With Purpose</h2>
           <p className="mt-6 text-lg text-gray-300">
-            Create prediction polls, preditct the fututre outcomes correctly and earn.
-            <p>Your Predictions, Our rewards.</p>
+            Create prediction polls alongside traditional posting, predict the future outcomes correctly and earn.
+            Your Predictions, Our rewards.
           </p>
           <div className="mt-8">
             <Link
@@ -62,8 +62,8 @@ export default function LandingPage() {
           transition={{ duration: 0.8, delay: 0.3 }}
           className="relative z-10 mt-12 md:mt-0"
         >
-          <img src="/hero-image.svg" alt="Hero" className="w-full md:w-[500px]" />
-          <div className="py-64"></div>
+          <img src="/asset1.png" className="w-full md:w-[500px] transform rotate-8 px-12" />
+          <div className="py-24"></div>
         </motion.div>
       </section>
 

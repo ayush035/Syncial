@@ -8,9 +8,9 @@ export default function LandingPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0f172a] to-[#1e293b] text-white flex flex-col">
-      {/* Navbar */}
-      <nav className="flex justify-between items-center px-8 md:px-24 py-6 bg-transparent">
+    <div className="min-h-screen text-white flex flex-col">
+      {/* NAVBAR */}
+      <nav className="flex justify-between items-center px-8 md:px-24 py-6 bg-black">
         <h1 className="text-3xl font-extrabold tracking-tight">Syncial</h1>
         <div className="space-x-6 text-lg">
           <Link href="#features" className="hover:text-blue-400 transition">Features</Link>
@@ -19,50 +19,81 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <section className="flex flex-col md:flex-row items-center justify-between px-8 md:px-24 py-24">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }} 
-          animate={{ opacity: 1, y: 0 }} 
+      {/* HERO SECTION WITH BACKGROUND IMAGE */}
+      <section
+        className="relative w-full bg-no-repeat  bg-contain flex flex-col md:flex-row items-center justify-between md:px-24 py-24"
+        style={{
+          backgroundImage: `url('/webpage.jpeg')`,
+          backgroundSize: 'contain',
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: 'center',
+        }}
+      >
+        {/* Optional dark overlay */}
+        <div className="absolute inset-0 bg-black/60 z-0" />
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="max-w-2xl"
+          className="relative z-10 max-w-2xl"
         >
-          <h2 className="text-5xl md:text-6xl font-bold leading-tight">Shape the Future with Your Voice</h2>
+          <h2 className="text-5xl md:text-6xl font-bold leading-tight text-white font-sans">Predictions can Earn</h2>
           <p className="mt-6 text-lg text-gray-300">
-            Syncial lets you create prediction polls alongside social posts, stake outcomes, and earn — all secured by blockchain transparency.
+            Create prediction polls, preditct the fututre outcomes correctly and earn.
+            <p>Your Predictions, Our rewards.</p>
           </p>
           <div className="mt-8">
-            <Link href="#start" className="inline-block px-8 py-4 bg-blue-600 hover:bg-blue-700 rounded-full text-lg font-semibold transition">
+            <Link
+              href="#start"
+              className="inline-block px-8 py-4 bg-rose-500 hover:bg-rose-400 rounded-2xl text-lg font-semibold transition"
+            >
               Start Predicting
             </Link>
+            <div className="py-24"></div>
+            
           </div>
+          
         </motion.div>
 
         <motion.div
           initial={{ opacity: 0, x: 50 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.8, delay: 0.3 }}
-          className="mt-12 md:mt-0"
+          className="relative z-10 mt-12 md:mt-0"
         >
           <img src="/hero-image.svg" alt="Hero" className="w-full md:w-[500px]" />
+          <div className="py-64"></div>
         </motion.div>
       </section>
 
-      {/* Features Section */}
-      <section id="features" className="px-8 md:px-24 py-20">
+      {/* FEATURES */}
+      <section id="features" className="px-8 md:px-24 py-20 ">
         <h2 className="text-4xl font-bold text-center mb-16">Features</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
           {[
-            { title: "Create Prediction Polls", description: "Post polls about future events and allow users to stake on outcomes.", image: "/feature-poll.svg" },
-            { title: "Earn Rewards", description: "Poll creators earn a portion of the total stake, rewarding engagement and accuracy.", image: "/feature-earn.svg" },
-            { title: "On-Chain Settlement", description: "Transparent and secure bet settlements powered by decentralized oracles.", image: "/feature-onchain.svg" },
+            {
+              title: "Create Prediction Polls",
+              description: "Post polls about future events and allow users to stake on outcomes.",
+              image: "/feature-poll.svg",
+            },
+            {
+              title: "Earn Rewards",
+              description: "Poll creators earn a portion of the total stake, rewarding engagement and accuracy.",
+              image: "/feature-earn.svg",
+            },
+            {
+              title: "On-Chain Settlement",
+              description: "Transparent and secure bet settlements powered by decentralized oracles.",
+              image: "/feature-onchain.svg",
+            },
           ].map((feature, index) => (
-            <motion.div 
-              key={index} 
-              initial={{ opacity: 0, y: 20 }} 
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: index * 0.2 }}
-              className="bg-[#1e293b] p-8 rounded-2xl shadow-lg hover:shadow-2xl transition"
+              className=" p-8 rounded-2xl shadow-lg hover:shadow-2xl transition"
             >
               <img src={feature.image} alt={feature.title} className="w-20 h-20 mb-6 mx-auto" />
               <h3 className="text-2xl font-semibold text-center mb-4">{feature.title}</h3>
@@ -72,8 +103,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* How It Works */}
-      <section id="how-it-works" className="px-8 md:px-24 py-20 bg-[#0f172a]">
+      {/* HOW IT WORKS */}
+      <section id="how-it-works" className="px-8 md:px-24 py-20">
         <h2 className="text-4xl font-bold text-center mb-16">How It Works</h2>
         <div className="max-w-4xl mx-auto text-gray-300 text-lg leading-8">
           <p className="mb-6">Syncial combines social media and decentralized prediction markets. Users can create posts or add prediction polls tied to real-world events.</p>
@@ -82,16 +113,16 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Call to Action */}
-      <section id="start" className="flex flex-col items-center justify-center py-20 bg-gradient-to-br from-blue-600 to-purple-600 text-white">
+      {/* CTA */}
+      <section id="start" className="flex flex-col items-center justify-center py-20 text-white">
         <h2 className="text-4xl font-bold mb-6">Ready to Shape the Future?</h2>
         <Link href="#" className="px-10 py-5 bg-black hover:bg-gray-800 rounded-full text-lg font-semibold transition">
           Get Started Now
         </Link>
       </section>
 
-      {/* Footer */}
-      <footer className="text-center text-gray-400 text-sm py-10">
+      {/* FOOTER */}
+      <footer className="text-center text-gray-400 text-sm py-10 ">
         © {new Date().getFullYear()} Syncial. All rights reserved.
       </footer>
     </div>

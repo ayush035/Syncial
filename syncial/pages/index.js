@@ -124,7 +124,7 @@ export default function LandingPage() {
 
       {/* FOOTER */}
       <footer className="text-center text-gray-400 text-sm py-10 ">
-        © {new Date().getFullYear()} Syncial.co All rights reserved.
+        © {new Date().getFullYear()} Syncial.xyz All rights reserved.
       </footer>
     </div>
   );

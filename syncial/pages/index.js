@@ -23,7 +23,7 @@ export default function LandingPage() {
       <section
         className="relative w-full bg-no-repeat  bg-contain flex flex-col md:flex-row items-center justify-between md:px-24 py-24"
         style={{
-          backgroundImage: `url('/webpage.jpeg')`,
+          backgroundImage: `url('/webpage.JPEG')`,
           backgroundSize: 'contain',
           backgroundRepeat: 'no-repeat',
           backgroundPosition: 'center',
@@ -38,7 +38,7 @@ export default function LandingPage() {
           transition={{ duration: 0.8 }}
           className="relative z-10 max-w-2xl"
         >
-          <h2 className="text-5xl md:text-6xl font-bold leading-tight text-white font-sans">Polls With Purpose</h2>
+          <h2 className="text-5xl md:text-6xl font-bold leading-tight text-white font-sans">Socialize and Predict</h2>
           <p className="mt-6 text-lg text-gray-300">
             Create prediction polls alongside traditional posting, predict the future outcomes correctly and earn.
             Your Predictions, Our rewards.

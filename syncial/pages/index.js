@@ -46,14 +46,14 @@ export default function LandingPage() {
           className="relative z-10 max-w-2xl"
         >
           <h2 className="text-5xl md:text-6xl font-bold leading-tight text-white font-sans">Socialize and Predict</h2>
-          <p className="mt-6 text-lg text-gray-300">
+          <p className="mt-6 text-lg text-rose-100">
             Create prediction polls alongside traditional posting, predict the future outcomes correctly and earn.
             Your Predictions, Our rewards.
           </p>
           <div className="mt-8">
             <Link
               href="/onboard"
-              className="inline-block px-8 py-4 bg-rose-500 hover:bg-rose-400 rounded-2xl text-lg font-semibold transition"
+              className="inline-block px-8 py-4 bg-[#ED3968] hover:bg-rose-400 rounded-2xl text-lg font-semibold transition"
             >
               Start Predicting
             </Link>
@@ -77,7 +77,7 @@ export default function LandingPage() {
       
         {/* FEATURES */}
       <section id="features" className="px-8 md:px-24 py-20 ">
-        <h2 className="text-5xl font-bold text-center mb-16 text-rose-500">Features</h2>
+        <h2 className="text-5xl font-bold text-center mb-16 text-[#ED3968]">Features</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
           
           {[

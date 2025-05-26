@@ -6,7 +6,7 @@ import logo from '@/public/logo.jpg'
 
 export default function LandingPage() {
   useEffect(() => {
-    document.title = "Syncial - SocialFi Prediction Platform";
+    document.title = "Syncial - SocialFi x Prediction Platform";
   }, []);
 
   return (
@@ -77,23 +77,24 @@ export default function LandingPage() {
       
         {/* FEATURES */}
       <section id="features" className="px-8 md:px-24 py-20 ">
-        <h2 className="text-4xl font-bold text-center mb-16">Features</h2>
+        <h2 className="text-4xl font-bold text-center mb-16 text-rose-400">Features</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+          
           {[
             {
               title: "Create Prediction Polls",
               description: "Post polls about future events and allow users to stake on outcomes.",
-              image: "/feature-poll.svg",
+              image: "/asset2.png",
             },
             {
               title: "Earn Rewards",
               description: "Poll creators earn a portion of the total stake, rewarding engagement and accuracy.",
-              image: "/feature-earn.svg",
+              image: "/asset3.png",
             },
             {
-              title: "On-Chain Settlement",
-              description: "Transparent and secure bet settlements powered by decentralized oracles.",
-              image: "/feature-onchain.svg",
+              title: "Instant Settlement",
+              description: "Transparent and secure bet settlements onchain powered by decentralized oracles.",
+              image: "/asset5.png",
             },
           ].map((feature, index) => (
             <motion.div
@@ -101,13 +102,23 @@ export default function LandingPage() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: index * 0.2 }}
-              className=" p-8 rounded-2xl shadow-lg hover:shadow-2xl transition"
+              className="p-8 rounded-2xl shadow-lg hover:shadow-2xl transition text-white text-center outline- outline-rose-400"
             >
-              <img src={feature.image} alt={feature.title} className="w-20 h-20 mb-6 mx-auto" />
-              <h3 className="text-2xl font-semibold text-center mb-4">{feature.title}</h3>
-              <p className="text-gray-400 text-center">{feature.description}</p>
+              <img
+                src={feature.image}
+                alt={feature.title}
+                className={`mx-auto mb-6 ${
+                  feature.image === "/asset3.png","/asset2.png", "/asset3.png"
+                    ? "w-70 h-70 object-contain"
+                    : "w-20 h-20 object-contain"
+                }`}
+              />
+          
+              <h3 className="text-2xl font-semibold mb-4">{feature.title}</h3>
+              <p className="text-gray-400">{feature.description}</p>
             </motion.div>
           ))}
+          
         </div>
       </section>
 

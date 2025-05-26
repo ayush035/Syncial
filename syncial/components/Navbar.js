@@ -2,7 +2,8 @@ import Link from "next/link";
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 // import  '@/styles/Home.module.css'
 import Image from "next/image";
-
+import Image from "next/image";
+import logo from '@/public/logo.jpg'
 export default function Navbar() {
 
     return (

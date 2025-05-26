@@ -77,7 +77,7 @@ export default function LandingPage() {
       
         {/* FEATURES */}
       <section id="features" className="px-8 md:px-24 py-20 ">
-        <h2 className="text-4xl font-bold text-center mb-16 text-rose-400">Features</h2>
+        <h2 className="text-5xl font-bold text-center mb-16 text-rose-500">Features</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
           
           {[
@@ -109,7 +109,7 @@ export default function LandingPage() {
                 alt={feature.title}
                 className={`mx-auto mb-6 ${
                   feature.image === "/asset3.png","/asset2.png", "/asset3.png"
-                    ? "w-70 h-70 object-contain"
+                    ? "w-60 h-60 object-contain"
                     : "w-20 h-20 object-contain"
                 }`}
               />

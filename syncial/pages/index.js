@@ -11,11 +11,12 @@ export default function LandingPage() {
     <div className="min-h-screen text-white flex flex-col">
       {/* NAVBAR */}
       <nav className="flex justify-between items-center px-8 md:px-24 py-6 bg-black">
-        <h1 className="text-3xl font-extrabold tracking-tight">Syncial</h1>
+        <Link href='/'>
+        <h1 className="text-3xl font-extrabold tracking-tight">Syncial</h1></Link>
         <div className="space-x-6 text-md">
           {/* <Link href="#features" className="hover:text-blue-400 transition">Features</Link>
           <Link href="#how-it-works" className="hover:text-blue-400 transition">How It Works</Link> */}
-          <Link href="#start" className="hover:text-rose-400 hover:outline-2 transition outline-1 outline-rose-400 rounded-md px-4 py-2 text-rose-300 font-semibold">Launch App</Link>
+          <Link href="/onboard" className="hover:text-rose-400 hover:outline-2 transition outline-1 outline-rose-400 rounded-md px-4 py-2 text-rose-300 font-semibold">Launch App</Link>
         </div>
       </nav>
 
@@ -45,7 +46,7 @@ export default function LandingPage() {
           </p>
           <div className="mt-8">
             <Link
-              href="#start"
+              href="/onboard"
               className="inline-block px-8 py-4 bg-rose-500 hover:bg-rose-400 rounded-2xl text-lg font-semibold transition"
             >
               Start Predicting

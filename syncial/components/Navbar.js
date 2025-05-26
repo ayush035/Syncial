@@ -13,7 +13,11 @@ export default function Navbar() {
       {/* NAVBAR */}
       <nav className="flex justify-between items-center px-8 md:px-24 py-6 bg-black">
       <Link href='/'>
-      <h1 className="text-3xl font-extrabold tracking-tight">Syncial</h1></Link>
+      <Image
+                    src = {logo}
+                    alt=''
+                 width="230"
+                 height="230"/></Link>
         <div className="space-x-6 text-md">
           {/* <Link href="#features" className="hover:text-blue-400 transition">Features</Link>
           <Link href="#how-it-works" className="hover:text-blue-400 transition">How It Works</Link> */}

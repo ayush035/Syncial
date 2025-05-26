@@ -33,7 +33,7 @@ function MyApp({ Component, pageProps }) {
         <RainbowKitProvider 
         initialChain={4}
         theme={darkTheme({
-          accentColor: '#F33A6A',
+          accentColor: '#f43f5e',
           accentColorForeground: 'white',
           borderRadius: 'medium',
           modalBorder: '#F33A6A'

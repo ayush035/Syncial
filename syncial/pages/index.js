@@ -73,7 +73,7 @@ export default function LandingPage() {
           <div className="py-24"></div>
         </motion.div>
       </section>
-      <hr className="bg-rose-400 border-0" style={{ height: '0.5px' }} />    
+      {/* <hr className="bg-rose-400 border-0" style={{ height: '0.5px' }} />     */}
       
         {/* FEATURES */}
       <section id="features" className="px-8 md:px-24 py-20 ">

@@ -9,7 +9,7 @@ export default function Navbar() {
         
 
 
-<div className="min-h-screen text-white flex flex-col">
+<div className=" text-white flex flex-col">
       {/* NAVBAR */}
       <nav className="flex justify-between items-center px-8 md:px-24 py-6 bg-black">
       <Link href='/'>

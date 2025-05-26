@@ -123,14 +123,14 @@ export default function LandingPage() {
       </section>
 
       {/* HOW IT WORKS */}
-      <section id="how-it-works" className="px-8 md:px-24 py-20">
+      {/* <section id="how-it-works" className="px-8 md:px-24 py-20">
         <h2 className="text-4xl font-bold text-center mb-16">How It Works</h2>
         <div className="max-w-4xl mx-auto text-gray-300 text-lg leading-8">
           <p className="mb-6">Syncial combines social media and decentralized prediction markets. Users can create posts or add prediction polls tied to real-world events.</p>
           <p className="mb-6">Participants stake crypto on poll outcomes. A share of the stakes goes to poll creators, encouraging high-quality and engaging questions.</p>
           <p>Results are determined using decentralized oracles, ensuring trustless settlement. A small fee is allocated to platform development to keep growing the ecosystem sustainably.</p>
         </div>
-      </section>
+      </section> */}
 
       {/* CTA */}
       {/* <section id="start" className="flex flex-col items-center justify-center py-20 text-white">

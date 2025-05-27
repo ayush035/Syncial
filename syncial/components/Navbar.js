@@ -22,7 +22,7 @@ export default function Navbar() {
                     alt=''
                  width="230"
                  height="230"/></Link>
-                   <div className="flex items-center bg-[#16030d] rounded-xl w-fit my-4 mx-6 px-4 h-11 outline outline-1 outline-[#39071f]">
+                   <div className="flex items-center bg-[#16030d] rounded-xl w-60 my-2 mx-6 px-2 h-11 outline outline-1 outline-[#39071f]">
       <Search className="text-[#563e4b] w-5 h-5 mr-2" />
       <input
         className="text-rose-100 bg-[#16030d] text-lg w-60 h-full outline-none "

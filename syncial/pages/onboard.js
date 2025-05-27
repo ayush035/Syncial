@@ -24,7 +24,7 @@ return(
         Enter your preffered Username to create an account
     </div>
 <div  className="flex justify-center py-4">
-    <input className="rounded-xl text-rose-100 px-4 py-2 bg-[#39071f] w-120 h-13 text-lg outline-1 outline-[#39071f] " placeholder="Username"/>
+    <input className="rounded-xl text-rose-100 px-4 py-2 bg-[#16030d] w-120 h-13 text-lg outline-1 outline-[#39071f] " placeholder="Username"/>
 </div>
 <div className=" text-rose-100 text-md my- mx-24">
 By signing up, you are agreeing to Syncial's 

@@ -13,16 +13,16 @@ import {
 } from '@rainbow-me/rainbowkit';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { WagmiProvider, http } from 'wagmi'
-import { metis } from 'wagmi/chains'
+import { metis, sepolia } from 'wagmi/chains'
 import { getDefaultConfig, } from '@rainbow-me/rainbowkit'
 
 
 const config = getDefaultConfig({
-  appName: 'RainbowKit demo',
-  projectId: '9c17dc69becbe137fe50e55e31598852',
-  chains: [metis],
+  appName: 'Syncial',
+  projectId: 'e789aa4ef8fbaccc12ac0cca7d97b01d',
+  chains: [sepolia],
   transports: {
-    [metis.id]: http(),
+    [sepolia.id]: http(),
   },
 })
 const queryClient = new QueryClient()

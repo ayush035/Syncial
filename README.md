@@ -1,5 +1,5 @@
 ### GET STARTED 
-- Go to https://syncial.xyz
+- Go to syncial.xyz
 - Click on the Launch App button
 - Connect your wallet (currently app is deployed on Sepolia Network)
 - Enter your preferred Username and click on Signup

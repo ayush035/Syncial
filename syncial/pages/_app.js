@@ -23,7 +23,7 @@ const config = getDefaultConfig({
   chains: [sepolia],
   transports: {
     [sepolia.id]: http(),
-  },
+  }
 })
 const queryClient = new QueryClient()
 

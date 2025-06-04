@@ -1,5 +1,6 @@
-import { FaTwitter, FaTelegram, FaEnvelope, FaLinkedin } from 'react-icons/fa';
-
+import { FaTelegramPlane } from 'react-icons/fa';
+import { FaXTwitter,FaLinkedinIn } from "react-icons/fa6";
+import { LuMail } from "react-icons/lu";
 export default function Footer() {
   return (
     <footer className="bg-[#0f0f0f] text-white py-6 border-t border-rose-500">
@@ -9,17 +10,17 @@ export default function Footer() {
         </p>
 
         <div className="flex space-x-6">
-          <a href="https://twitter.com/syncialxyz" target="_blank" rel="noopener noreferrer" className="hover:text-[#ED3968] transition">
-            <FaTwitter size={20} />
+          <a href="https://x.com/syncialxyz" target="_blank" rel="noopener noreferrer" className="hover:text-[#ED3968] transition">
+            <FaXTwitter size={20} />
           </a>
           <a href="https://t.me/syncial" target="_blank" rel="noopener noreferrer" className="hover:text-[#ED3968] transition">
-            <FaTelegram size={20} />
+            <FaTelegramPlane size={20} />
           </a>
-          <a href="mailto:hello@syncial.xyz" className="hover:text-[#ED3968] transition">
-            <FaEnvelope size={20} />
+          <a href="mailto:hey.syncial@gmail.com" className="hover:text-[#ED3968] transition">
+            <LuMail size={20} />
           </a>
           <a href="https://www.linkedin.com/company/syncial" target="_blank" rel="noopener noreferrer" className="hover:text-[#ED3968] transition">
-            <FaLinkedin size={20} />
+            <FaLinkedinIn size={20} />
           </a>
         </div>
       </div>

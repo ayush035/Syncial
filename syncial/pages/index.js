@@ -141,9 +141,9 @@ export default function LandingPage() {
       </section> */}
 
       {/* FOOTER */}
-      <footer className="text-center text-gray-400 text-sm py-10 ">
+      {/* <footer className="text-center text-gray-400 text-sm py-10 ">
         © {new Date().getFullYear()} Syncial.xyz All rights reserved.
-      </footer>
+      </footer> */}
     </div>
   );
 }

@@ -69,7 +69,7 @@ export default function LandingPage() {
           transition={{ duration: 0.8, delay: 0.3 }}
           className="relative z-10 mt-12 md:mt-0"
         >
-          <img src="/asset1.png" className="w-full md:w-[560px] transform rotate-8 px-12" />
+          <img src="/asset1.png" className="w-full md:w-[560px] transform rotate-8 px-12 width: auto" />
           <div className="py-24"></div>
         </motion.div>
       </section>

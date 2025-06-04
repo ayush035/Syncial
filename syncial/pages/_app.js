@@ -15,7 +15,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { WagmiProvider, http } from 'wagmi'
 import { metis, sepolia } from 'wagmi/chains'
 import { getDefaultConfig, } from '@rainbow-me/rainbowkit'
-
+import Footer from '@/components/Footer';
 
 const config = getDefaultConfig({
   appName: 'Syncial',
@@ -47,7 +47,7 @@ function MyApp({ Component, pageProps }) {
             <Analytics />
             <SpeedInsights />
           </div>
-          {/* <Footer /> */}
+          <Footer />
         </div>
       </RainbowKitProvider>
       </QueryClientProvider>

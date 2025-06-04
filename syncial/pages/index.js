@@ -121,6 +121,9 @@ export default function LandingPage() {
           
         </div>
       </section>
+      <div className="my-16">
+
+      </div>
 
       {/* HOW IT WORKS */}
       {/* <section id="how-it-works" className="px-8 md:px-24 py-20">

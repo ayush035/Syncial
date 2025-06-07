@@ -43,7 +43,7 @@ export default function LandingPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="relative z-10 max-w-2xl"
+          className="relative z-10 max-w-2xl mx-12"
         >
           <h2 className="text-5xl md:text-6xl font-bold leading-tight text-white font-sans">Socialize and Predict</h2>
           <p className="mt-6 text-lg text-rose-100">

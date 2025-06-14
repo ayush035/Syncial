@@ -3,6 +3,7 @@ import { FaXTwitter,FaLinkedinIn } from "react-icons/fa6";
 import { LuMail } from "react-icons/lu";
 import { FiGithub } from "react-icons/fi";
 
+
 export default function Footer() {
   return (
     <footer className="bg-[#0f0f0f] text-white py-6 border-t border-rose-500">

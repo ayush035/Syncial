@@ -17,12 +17,21 @@ import { metis, sepolia } from 'wagmi/chains'
 import { getDefaultConfig, } from '@rainbow-me/rainbowkit'
 import Footer from '@/components/Footer';
 
+const Nerotestnet = {
+  id: 689,
+  name: 'Nero Testnet',
+  nativeCurrency: { name: 'NERO', symbol: 'NERO', decimals: 18 },
+  rpcUrls: {
+    default: { http: ['https://rpc-testnet.nerochain.io'] },
+  }
+}
+
 const config = getDefaultConfig({
   appName: 'Syncial',
   projectId: 'e789aa4ef8fbaccc12ac0cca7d97b01d',
-  chains: [sepolia],
+  chains: [Nerotestnet],
   transports: {
-    [sepolia.id]: http(),
+    [Nerotestnet.id]: http(),
   }
 })
 const queryClient = new QueryClient()

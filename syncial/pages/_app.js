@@ -17,14 +17,6 @@ import { metis, sepolia } from 'wagmi/chains'
 import { getDefaultConfig, } from '@rainbow-me/rainbowkit'
 import Footer from '@/components/Footer';
 
-const Nerotestnet = {
-  id: 689,
-  name: 'Nero Testnet',
-  nativeCurrency: { name: 'NERO', symbol: 'NERO', decimals: 18 },
-  rpcUrls: {
-    default: { http: ['https://rpc-testnet.nerochain.io'] },
-  }
-}
 
 const config = getDefaultConfig({
   appName: 'Syncial',

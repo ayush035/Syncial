@@ -4,7 +4,7 @@ import { useAccount } from 'wagmi';
 import Navbar from '@/components/Navbar';
 import SuccessModal from '@/components/SuccessModal';
 
-const contractAddress = "0xA46B02adA701EB34Ad9AC8feB786F575208a4c46";
+const contractAddress = "0x213dBCCe2A6af7F5f1a4d15CE4950eb4006B1D2F";
 const contractABI = [{
     "anonymous": false,
     "inputs": [

@@ -29,9 +29,9 @@ const Nerotestnet = {
 const config = getDefaultConfig({
   appName: 'Syncial',
   projectId: 'e789aa4ef8fbaccc12ac0cca7d97b01d',
-  chains: [Nerotestnet],
+  chains: [sepolia],
   transports: {
-    [Nerotestnet.id]: http(),
+    [sepolia.id]: http(),
   }
 })
 const queryClient = new QueryClient()

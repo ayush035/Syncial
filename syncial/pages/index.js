@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
-import logo from '@/public/logo.jpg'
+import logo from '@/public/logo.jpg';
 
 export default function LandingPage() {
   useEffect(() => {
@@ -12,23 +12,30 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen text-white flex flex-col">
       {/* NAVBAR */}
-      <nav className="flex justify-between items-center px-8 md:px-24 py-6 bg-black">
-        <Link href='/'>
-        <Image
-                    src = {logo}
-                    alt=''
-                 width="230"
-                 height="230"/></Link>
-        <div className="space-x-6 text-md">
-          {/* <Link href="#features" className="hover:text-blue-400 transition">Features</Link>
-          <Link href="#how-it-works" className="hover:text-blue-400 transition">How It Works</Link> */}
+      <nav className="relative flex justify-between md:justify-between items-center px-8 md:px-24 py-6 bg-black">
+        {/* Centered Logo on Mobile */}
+        <div className="absolute left-1/2 transform -translate-x-1/2 md:static md:translate-x-0">
+          <Link href='/'>
+          <Image
+  src={logo}
+  alt="Syncial Logo"
+  className="w-32 h-auto md:w-[230px] md:h-auto"
+/>
+          </Link>
+        </div>
+
+        {/* Spacer to align logo on desktop */}
+        <div className="md:flex-1 hidden md:block"></div>
+
+        {/* Launch App Button - hidden on mobile */}
+        <div className="hidden md:block space-x-6 text-md">
           <Link href="/onboard" className="hover:text-rose-400 hover:outline-2 transition outline-1 outline-rose-400 rounded-md px-4 py-2 text-rose-300 font-semibold">Launch App</Link>
         </div>
       </nav>
 
       {/* HERO SECTION WITH BACKGROUND IMAGE */}
       <section
-        className="relative w-full bg-no-repeat  bg-contain flex flex-col md:flex-row items-center justify-between md:px-24 py-24"
+        className="relative w-full bg-no-repeat bg-contain flex flex-col md:flex-row items-center justify-between md:px-24 py-24"
         style={{
           backgroundImage: `url('/webpage.JPEG')`,
           backgroundSize: 'contain',
@@ -36,7 +43,6 @@ export default function LandingPage() {
           backgroundPosition: 'center',
         }}
       >
-        {/* Optional dark overlay */}
         <div className="absolute inset-0 bg-black/60 z-0" />
 
         <motion.div
@@ -58,9 +64,7 @@ export default function LandingPage() {
               Start Predicting
             </Link>
             <div className="py-24"></div>
-            
           </div>
-          
         </motion.div>
 
         <motion.div
@@ -73,13 +77,11 @@ export default function LandingPage() {
           <div className="py-24"></div>
         </motion.div>
       </section>
-      {/* <hr className="bg-rose-400 border-0" style={{ height: '0.5px' }} />     */}
-      
-        {/* FEATURES */}
+
+      {/* FEATURES */}
       <section id="features" className="px-8 md:px-24 py-20 ">
         <h2 className="text-5xl font-bold text-center mb-16 text-[#ED3968]">Features</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-          
           {[
             {
               title: "Create Prediction Polls",
@@ -113,40 +115,14 @@ export default function LandingPage() {
                     : "w-20 h-20 object-contain"
                 }`}
               />
-          
               <h3 className="text-2xl font-semibold mb-4">{feature.title}</h3>
               <p className="text-gray-400">{feature.description}</p>
             </motion.div>
           ))}
-          
         </div>
       </section>
-      <div className="my-16">
 
-      </div>
-
-      {/* HOW IT WORKS */}
-      {/* <section id="how-it-works" className="px-8 md:px-24 py-20">
-        <h2 className="text-4xl font-bold text-center mb-16">How It Works</h2>
-        <div className="max-w-4xl mx-auto text-gray-300 text-lg leading-8">
-          <p className="mb-6">Syncial combines social media and decentralized prediction markets. Users can create posts or add prediction polls tied to real-world events.</p>
-          <p className="mb-6">Participants stake crypto on poll outcomes. A share of the stakes goes to poll creators, encouraging high-quality and engaging questions.</p>
-          <p>Results are determined using decentralized oracles, ensuring trustless settlement. A small fee is allocated to platform development to keep growing the ecosystem sustainably.</p>
-        </div>
-      </section> */}
-
-      {/* CTA */}
-      {/* <section id="start" className="flex flex-col items-center justify-center py-20 text-white">
-        <h2 className="text-4xl font-bold mb-6">Ready to Shape the Future?</h2>
-        <Link href="#" className="px-10 py-5 bg-black hover:bg-gray-800 rounded-full text-lg font-semibold transition">
-          Get Started Now
-        </Link>
-      </section> */}
-
-      {/* FOOTER */}
-      {/* <footer className="text-center text-gray-400 text-sm py-10 ">
-        © {new Date().getFullYear()} Syncial.xyz All rights reserved.
-      </footer> */}
+      <div className="my-16"></div>
     </div>
   );
 }

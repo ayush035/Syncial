@@ -139,10 +139,10 @@ const MintUsername = () => {
             />
           )}
 
-          <div className="flex justify-center items-center py-10 px-4">
+          <div className="flex justify-center items-center py-20 px-4">
             <div className="w-full max-w-md">
-              <div className="text-white text-4xl md:text-7xl font-bold text-center">WELCOME TO</div>
-              <p className="text-[#ED3968] text-4xl md:text-7xl font-bold text-center mt-2">SYNCIAL</p>
+              <div className="text-white text-4xl md:text-6xl font-bold text-center">WELCOME TO</div>
+              <p className="text-[#ED3968] text-4xl md:text-6xl font-bold text-center mt-2">SYNCIAL</p>
 
               <div className="text-rose-100 text-center text-sm md:text-md mt-4">
                 Enter your preferred Username to create an account

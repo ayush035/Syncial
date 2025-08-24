@@ -13,7 +13,7 @@ export default function Navbar() {
       <nav className="flex justify-between items-center px-4 md:px-24 py-4 bg-black">
         {/* Left: Logo + Search bar */}
         <div className="flex items-center">
-          <Link href="/">
+          <Link href="https://syncial.xyz">
             <Image
               src={logo}
               alt="Syncial Logo"

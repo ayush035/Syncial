@@ -29,7 +29,7 @@ export default function LandingPage() {
 
         {/* Launch App Button - hidden on mobile */}
         <div className="hidden md:block space-x-6 text-md">
-          <Link href="/onboard" className="hover:text-rose-400 hover:outline-2 transition outline-1 outline-rose-400 rounded-md px-4 py-2 text-rose-300 font-semibold">Launch App</Link>
+          <Link href="https://app.syncial.xyz" className="hover:text-rose-400 hover:outline-2 transition outline-1 outline-rose-400 rounded-md px-4 py-2 text-rose-300 font-semibold">Launch App</Link>
         </div>
       </nav>
 
@@ -58,7 +58,7 @@ export default function LandingPage() {
           </p>
           <div className="mt-8">
             <Link
-              href="/onboard"
+              href="https://app.syncial.xyz"
               className="inline-block px-8 py-4 bg-[#ED3968] hover:bg-rose-400 rounded-2xl text-lg font-semibold transition"
             >
               Start Predicting

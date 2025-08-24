@@ -80,7 +80,7 @@ export default function LandingPage() {
 
       {/* FEATURES */}
       <section id="features" className="px-8 md:px-24 py-20 ">
-        <h2 className="text-5xl font-bold text-center mb-16 text-[#ED3968]">Features</h2>
+        <h2 className="text-5xl font-bold text-center mb-16 text-[#ED3968]">FEATURES</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
           {[
             {
@@ -121,6 +121,36 @@ export default function LandingPage() {
           ))}
         </div>
       </section>
+
+      <section className="relative w-full my-20 md:px-20 py-20 flex flex-col items-center">
+  {/* Background layer */}
+  <div
+    className="absolute inset-0 bg-no-repeat bg-contain opacity-30"
+    style={{
+      backgroundImage: `url('/bg.png')`,
+      backgroundSize: 'contain',
+      backgroundRepeat: 'no-repeat',
+      backgroundPosition: 'center',
+      zIndex: -1,
+    }}
+  />
+
+  {/* Heading inside background */}
+  <h2 className="text-5xl font-bold text-[#ED3968] mb-10 self-start ml-10">
+    HOW DOES IT WORK?
+  </h2>
+
+  {/* Diagram image - 50% width (zoomed out more) */}
+  <img
+    src="/diagram.png"
+    alt="Diagram"
+    className="w-67/100 h-auto"
+  />
+</section>
+
+
+
+
 
       <div className="my-16"></div>
     </div>

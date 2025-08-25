@@ -11,7 +11,7 @@ export default function Footer() {
         <p className="text-sm text-rose-100 mb-2 md:mb-0 text-center md:text-left">
           © {new Date().getFullYear()} Syncial.xyz All rights reserved.
         </p>
-
+        
         <div className="flex space-x-6">
           <a href="https://x.com/syncialxyz" target="_blank" rel="noopener noreferrer" className="hover:text-[#ED3968] transition">
             <FaXTwitter size={20} />

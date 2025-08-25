@@ -3,6 +3,8 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
 import logo from '@/public/logo.jpg';
+import Head from "next/head";
+
 
 export default function LandingPage() {
   useEffect(() => {
@@ -10,6 +12,25 @@ export default function LandingPage() {
   }, []);
 
   return (
+<>
+    <Head>
+        <title>Syncial</title>
+        <meta name="description" content="Syncial - A decentralized social platform" />
+
+        {/* Open Graph (for Facebook, LinkedIn, Telegram, etc.) */}
+        <meta property="og:title" content="Syncial" />
+        <meta property="og:description" content="Decentralized SocialFi platform onchain." />
+        <meta property="og:image" content="https://syncial.xyz/preview.png" />
+        <meta property="og:url" content="https://syncial.xyz" />
+        <meta property="og:type" content="website" />
+
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Syncial" />
+        <meta name="twitter:description" content="Decentralized SocialFi platform onchain." />
+        <meta name="twitter:image" content="https://syncial.xyz/preview.png" />
+      </Head> 
+
     <div className="min-h-screen text-white flex flex-col">
       {/* NAVBAR */}
       <nav className="relative flex justify-between md:justify-between items-center px-8 md:px-24 py-6 bg-black">
@@ -154,5 +175,6 @@ export default function LandingPage() {
 
       <div className="my-16"></div>
     </div>
+    </>
   );
 }

@@ -13,23 +13,24 @@ export default function LandingPage() {
 
   return (
 <>
-    <Head>
+<Head>
         <title>Syncial</title>
-        <meta name="description" content="Syncial - A decentralized social platform" />
+        <meta name="description" content="Syncial - SocialFi X Predictions Platform" />
 
-        {/* Open Graph (for Facebook, LinkedIn, Telegram, etc.) */}
+        {/* Open Graph */}
         <meta property="og:title" content="Syncial" />
-        <meta property="og:description" content="Decentralized SocialFi platform onchain." />
-        <meta property="og:image" content="https://syncial.xyz/preview.png" />
+        <meta property="og:description" content="SocialFi X Predictions Platform." />
+        <meta property="og:image" content="https://syncial.xyz/preview.png?v=1" />
         <meta property="og:url" content="https://syncial.xyz" />
         <meta property="og:type" content="website" />
 
-        {/* Twitter Card */}
+        {/* Twitter (X) */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Syncial" />
-        <meta name="twitter:description" content="Decentralized SocialFi platform onchain." />
-        <meta name="twitter:image" content="https://syncial.xyz/preview.png" />
-      </Head> 
+        <meta name="twitter:description" content="SocialFi X Predictions Platform ." />
+        <meta name="twitter:image" content="https://syncial.xyz/preview.png?v=1" />
+        <meta name="twitter:site" content="@Syncial" />
+      </Head>
 
     <div className="min-h-screen text-white flex flex-col">
       {/* NAVBAR */}

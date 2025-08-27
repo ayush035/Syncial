@@ -123,7 +123,6 @@ const MintUsername = () => {
 
   return (
     <>
-      <Navbar />
 
       {!isConnected ? (
         <div className="min-h-screen flex flex-col justify-center items-center bg-black text-white px-4">

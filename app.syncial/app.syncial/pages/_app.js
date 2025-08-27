@@ -16,6 +16,7 @@ import { WagmiProvider, http } from 'wagmi'
 import { metis, sepolia } from 'wagmi/chains'
 import { getDefaultConfig, } from '@rainbow-me/rainbowkit'
 import Footer from '@/components/Footer';
+import Navbar from '@/components/Navbar';
 
 
 const config = getDefaultConfig({
@@ -44,6 +45,8 @@ function MyApp({ Component, pageProps }) {
       >
         <div className="flex flex-col min-h-screen">
           <div className="flex-grow">
+          <Navbar/>
+
             <Component {...pageProps} />
             <Analytics />
             <SpeedInsights />

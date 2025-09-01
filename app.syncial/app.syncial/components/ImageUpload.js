@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAccount, useWalletClient } from 'wagmi';
+import { useAccount, useWalletClient, usePublicClient } from 'wagmi';
 import { Upload, X, Image as ImageIcon } from 'lucide-react';
 import { zgStorage } from '@/lib/0g-storage';
 import { getContractService } from '@/lib/contract';
@@ -11,6 +11,7 @@ export default function ImageUpload({ onUploadSuccess }) {
   const [dragActive, setDragActive] = useState(false);
   const { address, isConnected } = useAccount();
   const { data: walletClient } = useWalletClient();
+  const publicClient = usePublicClient();
 
   // Handle file selection
   const handleFileSelect = (file) => {
@@ -53,6 +54,12 @@ export default function ImageUpload({ onUploadSuccess }) {
       return;
     }
 
+    // Check if we can create contract service
+    if (!publicClient) {
+      toast.error('Wallet connection not ready. Please try again.');
+      return;
+    }
+
     setUploading(true);
     const loadingToast = toast.loading('Preparing upload...');
 
@@ -68,8 +75,9 @@ export default function ImageUpload({ onUploadSuccess }) {
       toast.loading('Creating post on blockchain...', { id: loadingToast });
       console.log('Creating post with root hash:', uploadResult.rootHash);
       
-      const contractService = getContractService();
-const contractResult = await contractService.createPost(uploadResult.rootHash);
+      // Pass wagmi clients to contract service
+      const contractService = getContractService(publicClient, walletClient);
+      const contractResult = await contractService.createPost(uploadResult.rootHash);
       console.log('Contract transaction successful:', contractResult);
       
       if (contractResult.success) {
@@ -92,7 +100,18 @@ const contractResult = await contractService.createPost(uploadResult.rootHash);
 
     } catch (error) {
       console.error('Upload failed:', error);
-      toast.error(`Upload failed: ${error.message}`, { id: loadingToast });
+      
+      // Better error handling
+      let errorMessage = 'Upload failed';
+      if (error.message.includes('wallet provider')) {
+        errorMessage = 'Wallet connection issue. Please reconnect and try again.';
+      } else if (error.message.includes('user rejected')) {
+        errorMessage = 'Transaction cancelled by user';
+      } else if (error.message) {
+        errorMessage = `Upload failed: ${error.message}`;
+      }
+      
+      toast.error(errorMessage, { id: loadingToast });
     } finally {
       setUploading(false);
     }
@@ -104,11 +123,11 @@ const contractResult = await contractService.createPost(uploadResult.rootHash);
 
   if (!isConnected) {
     return (
-      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+      <div className="bg-[#16030d] outline outline-2 outline-[#39071f] rounded-lg shadow-md p-6 mb-6">
         <div className="text-center">
           <ImageIcon className="mx-auto h-12 w-12 text-gray-400" />
-          <h3 className="mt-2 text-sm font-medium text-gray-900">Connect Wallet</h3>
-          <p className="mt-1 text-sm text-gray-500">
+          <h3 className="mt-2 text-sm font-medium text-white">Connect Wallet</h3>
+          <p className="mt-1 text-sm text-gray-400">
             Connect your wallet to start sharing images
           </p>
         </div>
@@ -170,7 +189,7 @@ const contractResult = await contractService.createPost(uploadResult.rootHash);
                 <X className="h-4 w-4" />
               </button>
             </div>
-            <div className="mt-2 text-sm text-gray-600">
+            <div className="mt-2 text-sm text-gray-400">
               <p className="font-medium">{selectedFile.name}</p>
               <p>{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</p>
             </div>
@@ -180,7 +199,7 @@ const contractResult = await contractService.createPost(uploadResult.rootHash);
         {selectedFile && (
           <button
             onClick={uploadPost}
-            disabled={uploading}
+            disabled={uploading || !publicClient}
             className="w-full bg-[#ED3968] text-white py-3 px-4 rounded-lg hover:bg-rose-500 disabled:bg-[#ED3968] disabled:cursor-not-allowed flex items-center justify-center space-x-2 hover:cursor-pointer"
           >
             {uploading ? (

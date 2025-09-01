@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useAccount } from 'wagmi';
+import { useAccount, usePublicClient, useWalletClient } from 'wagmi';
 import { RefreshCw, TrendingUp, Calendar, Image as ImageIcon } from 'lucide-react';
 import ImageUpload from '../components/ImageUpload';
 import PostCard from '../components/PostCard';
@@ -7,6 +7,7 @@ import { getContractService } from '../lib/contract';
 import toast from 'react-hot-toast';
 import Username from '@/components/Username'
 import { ConnectButton } from '@rainbow-me/rainbowkit';
+
 export default function Dashboard() {
   const [userPosts, setUserPosts] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -14,26 +15,43 @@ export default function Dashboard() {
   const [contractService, setContractService] = useState(null);
 
   const { address, isConnected } = useAccount();
+  const publicClient = usePublicClient();
+  const { data: walletClient } = useWalletClient();
 
-  // Initialize contractService in browser only
+  // Initialize contractService using wagmi providers instead of window.ethereum
   useEffect(() => {
-    if (typeof window !== "undefined") {
+    if (isConnected && address && publicClient) {
       try {
-        const service = getContractService();
-        setContractService(service);
+        // Only try to initialize if we have window.ethereum OR if we can create a service with wagmi
+        if (typeof window !== "undefined" && (window.ethereum || publicClient)) {
+          const service = getContractService(publicClient, walletClient);
+          setContractService(service);
+        }
       } catch (error) {
-        console.error(error.message);
-        toast.error("Wallet not detected. Connect MetaMask/Rainbow.");
+        console.error('Contract service initialization failed:', error.message);
+        // Don't set contractService if it fails - this prevents the loadUserPosts from running
+        setContractService(null);
       }
+    } else {
+      setContractService(null);
     }
-  }, []);
+  }, [isConnected, address, publicClient, walletClient]);
 
   const loadUserPosts = async () => {
-    if (!isConnected || !address || !contractService) return;
+    // Don't try to load posts if no contract service available
+    if (!isConnected || !address || !contractService) {
+      console.log('Skipping post loading - missing requirements:', { 
+        isConnected, 
+        address: !!address, 
+        contractService: !!contractService 
+      });
+      return;
+    }
 
     setLoading(true);
     try {
       console.log('Loading posts for address:', address);
+      // Pass the user address to getUserPosts
       const posts = await contractService.getUserPosts(address);
       console.log('Loaded user posts:', posts);
       
@@ -48,7 +66,12 @@ export default function Dashboard() {
 
     } catch (error) {
       console.error('Error loading posts:', error);
-      toast.error('Failed to load your posts');
+      // Show a more helpful error message
+      if (error.message.includes('Unable to fetch user posts')) {
+        toast.error('Unable to load posts with current connection. Try refreshing or reconnecting your wallet.');
+      } else if (!error.message.includes('wallet provider') && !error.message.includes('MetaMask')) {
+        toast.error('Failed to load your posts');
+      }
     } finally {
       setLoading(false);
     }
@@ -56,7 +79,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     loadUserPosts();
-  }, [isConnected, address, contractService]);
+  }, [contractService]);
 
   const handleUploadSuccess = (result) => {
     console.log('Upload successful:', result);

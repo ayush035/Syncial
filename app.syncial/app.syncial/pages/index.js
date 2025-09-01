@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
-import { useAccount } from 'wagmi';
+import { useAccount, usePublicClient, useWalletClient } from 'wagmi';
 import Navbar from '@/components/Navbar';
 import SuccessModal from '@/components/SuccessModal';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
@@ -142,16 +142,34 @@ const MintUsername = () => {
   const [showModal, setShowModal] = useState(false);
   const [existingUsername, setExistingUsername] = useState('');
   const { isConnected, address } = useAccount();
+  const publicClient = usePublicClient();
+  const { data: walletClient } = useWalletClient();
 
   useEffect(() => {
-    if (isConnected && address) {
+    if (isConnected && address && publicClient) {
       checkIfAlreadyMinted();
     }
-  }, [isConnected, address]);
+  }, [isConnected, address, publicClient]);
+
+  // Create provider that works with both injected wallets and WalletConnect
+  const getProvider = async () => {
+    // Try injected wallet first
+    if (typeof window !== "undefined" && window.ethereum) {
+      return new ethers.BrowserProvider(window.ethereum);
+    }
+    
+    // Fallback to wagmi publicClient
+    if (publicClient) {
+      const rpcUrl = publicClient.transport.url || publicClient.chain.rpcUrls.default.http[0];
+      return new ethers.JsonRpcProvider(rpcUrl);
+    }
+    
+    throw new Error('No provider available');
+  };
 
   const checkIfAlreadyMinted = async () => {
     try {
-      const provider = new ethers.BrowserProvider(window.ethereum);
+      const provider = await getProvider();
       const contract = new ethers.Contract(contractAddress, contractABI, provider);
       const existing = await contract.getUsernameFromWallet(address);
       if (existing && existing.length > 0) {
@@ -174,11 +192,16 @@ const MintUsername = () => {
       return;
     }
 
-    try {
-      const provider = new ethers.BrowserProvider(window.ethereum); // ✅ v6
-      const signer = await provider.getSigner(); // ✅ must `await` in v6
-      const contract = new ethers.Contract(contractAddress, contractABI, signer);
+    if (!publicClient) {
+      setStatus('Wallet connection not ready. Please try again.');
+      return;
+    }
 
+    try {
+      // First check if username is available (read-only operation)
+      const provider = await getProvider();
+      const contract = new ethers.Contract(contractAddress, contractABI, provider);
+      
       const available = await contract.isUsernameAvailable(username);
       if (!available) {
         setStatus('Username is already taken. Please try another.');
@@ -186,11 +209,55 @@ const MintUsername = () => {
       }
 
       setStatus('Minting username...');
-      const tx = await contract.mintUsername(username);
-      await tx.wait();
 
-      setStatus('✅ Username minted successfully!');
-      setShowModal(true);
+      // For writing transactions, use different methods based on wallet type
+      if (typeof window !== "undefined" && window.ethereum) {
+        // Injected wallet (MetaMask extension)
+        try {
+          const browserProvider = new ethers.BrowserProvider(window.ethereum);
+          const signer = await browserProvider.getSigner();
+          const contractWithSigner = new ethers.Contract(contractAddress, contractABI, signer);
+          
+          const tx = await contractWithSigner.mintUsername(username);
+          await tx.wait();
+          
+          setStatus('✅ Username minted successfully!');
+          setShowModal(true);
+          return;
+        } catch (error) {
+          console.log('Injected wallet failed, trying WalletConnect:', error.message);
+        }
+      }
+
+      // WalletConnect method
+      if (walletClient) {
+        try {
+          const hash = await walletClient.writeContract({
+            address: contractAddress,
+            abi: contractABI,
+            functionName: 'mintUsername',
+            args: [username],
+          });
+
+          // Wait for transaction confirmation
+          if (publicClient) {
+            await publicClient.waitForTransactionReceipt({ hash });
+          }
+
+          setStatus('✅ Username minted successfully!');
+          setShowModal(true);
+        } catch (error) {
+          console.error('WalletConnect transaction failed:', error);
+          if (error.message.includes('rejected')) {
+            setStatus('❌ Transaction cancelled by user.');
+          } else {
+            setStatus('❌ Error minting username.');
+          }
+        }
+      } else {
+        setStatus('❌ Wallet not properly connected.');
+      }
+
     } catch (error) {
       console.error(error);
       setStatus('❌ Error minting username.');
@@ -242,7 +309,8 @@ const MintUsername = () => {
               <div className="flex justify-center py-4">
                 <button
                   onClick={mintUsername}
-                  className="bg-[#ED3968] hover:bg-rose-400 rounded-2xl text-lg font-semibold transition w-full py-3"
+                  disabled={!publicClient}
+                  className="bg-[#ED3968] hover:bg-rose-400 rounded-2xl text-lg font-semibold transition w-full py-3 disabled:bg-gray-600 disabled:cursor-not-allowed"
                 >
                   Sign Up
                 </button>

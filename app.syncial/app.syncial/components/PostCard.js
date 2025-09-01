@@ -55,14 +55,14 @@ export default function PostCard({ post, showAuthor = true }) {
         <div className="px-4 py-3 outline outline-2 outline-[#39071f]">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+              <div className="w-10 h-10 bg-[#ED3968] rounded-full flex items-center justify-center">
                 <User className="h-5 w-5 text-white" />
               </div>
               <div>
-                <p className="font-semibold text-gray-900 text-sm">
+                <p className="font-semibold text-white text-sm">
                   {truncateAddress(post.author)}
                 </p>
-                <div className="flex items-center space-x-2 text-xs text-gray-500">
+                <div className="flex items-center space-x-2 text-xs text-white">
                   <Calendar className="h-3 w-3" />
                   <span>{formatRelativeTime(post.timestamp)}</span>
                 </div>
@@ -70,9 +70,9 @@ export default function PostCard({ post, showAuthor = true }) {
             </div>
             
             <div className="flex items-center space-x-2">
-              <span className="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded">
+              {/* <span className="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded">
                 #{post.id}
-              </span>
+              </span> */}
               <button
                 onClick={() => openInNewTab(`https://chainscan-newton.0g.ai/`)}
                 className="text-gray-400 hover:text-gray-600"

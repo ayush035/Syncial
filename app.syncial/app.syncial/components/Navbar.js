@@ -33,11 +33,11 @@ export default function Navbar() {
 
         {/* Right: Connect button & mobile menu toggle */}
         <div className="flex items-center space-x-5">
-        <div className="hidden md:block text-lg text-[#ED3968] font-semibold hover:text-white ">
-          <Link href={'/'}>Feed</Link>
+        <div className="hidden md:flex text-lg text-[#ED3968] font-semibold hover:text-white ">
+          <Link href={'/discover'}>Discover</Link>
             
           </div>
-        <div className="hidden md:block text-lg text-[#ED3968] font-semibold hover:text-white ">
+        <div className="hidden md:flex text-lg text-[#ED3968] font-semibold hover:text-white ">
         <Link href={'/dashboard'}>Dashboard</Link>
           </div>
      
@@ -57,19 +57,32 @@ export default function Navbar() {
 
       {/* Mobile Menu (drawer) */}
       {mobileMenuOpen && (
-        <div className="bg-[#16030d] text-white p-4 md:hidden space-y-4">
-          <ConnectButton />
+  <div className="bg-[#16030d] text-white p-4 md:hidden space-y-4">
+    {/* Mobile Nav Links */}
+    <div className="flex flex-col space-y-3 text-lg font-semibold">
+      <Link href="/discover" className="text-[#ED3968] hover:text-white">
+        Discover
+      </Link>
+      <Link href="/dashboard" className="text-[#ED3968] hover:text-white">
+        Dashboard
+      </Link>
+    </div>
 
-          {/* Mobile Search Bar (only visible when menu is open) */}
-          <div className="flex items-center bg-[#16030d] rounded-xl w-full px-2 h-11 outline outline-1 outline-[#39071f]">
-            <Search className="text-[#563e4b] w-5 h-5 mr-2" />
-            <input
-              className="text-rose-100 bg-[#16030d] text-lg w-full h-full outline-none"
-              placeholder="Search"
-            />
-          </div>
-        </div>
-      )}
+    {/* Mobile Connect Button */}
+    <div>
+      <ConnectButton />
+    </div>
+
+    {/* Mobile Search Bar */}
+    {/* <div className="flex items-center bg-[#16030d] rounded-xl w-full px-2 h-11 outline outline-1 outline-[#39071f]">
+      <Search className="text-[#563e4b] w-5 h-5 mr-2" />
+      <input
+        className="text-rose-100 bg-[#16030d] text-lg w-full h-full outline-none"
+        placeholder="Search"
+      />
+    </div> */}
+  </div>
+)}
     </div>
   );
 }

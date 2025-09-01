@@ -32,10 +32,19 @@ export default function Navbar() {
         </div>
 
         {/* Right: Connect button & mobile menu toggle */}
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-5">
+        <div className="hidden md:block text-lg text-[#ED3968] font-semibold">
+          <Link href={'/'}>Feed</Link>
+            
+          </div>
+        <div className="hidden md:block text-lg text-[#ED3968] font-semibold">
+        <Link href={'/dashboard'}>Dashboard</Link>
+          </div>
+     
           <div className="hidden md:block">
             <ConnectButton />
           </div>
+         
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="md:hidden text-[#ED3968]"

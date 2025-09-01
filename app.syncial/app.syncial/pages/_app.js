@@ -18,15 +18,35 @@ import { getDefaultConfig, } from '@rainbow-me/rainbowkit'
 import Footer from '@/components/Footer';
 import Navbar from '@/components/Navbar';
 
+const Oggalileo = {
+  id: 16601,
+  name: '0G-Galileo-Testnet',
 
-const config = getDefaultConfig({
+  iconBackground: '#fff',
+  nativeCurrency: { name: 'OG', symbol: 'OG', decimals: 18 },
+  rpcUrls: {
+    default: { http: ['https://evmrpc-testnet.0g.ai	'] },
+  },
+  blockExplorers: {
+    default: { name: '0g Galileo explorer', url: 'https://chainscan-galileo.0g.ai' },
+  },
+  // contracts: {
+  //   multicall3: {
+  //     address: '0xca11bde05977b3631167028862be2a173976ca11',
+  //     blockCreated: 11907934,
+  //   },
+  }
+ 
+ const config = getDefaultConfig({
   appName: 'Syncial',
   projectId: 'e789aa4ef8fbaccc12ac0cca7d97b01d',
-  chains: [sepolia],
+  chains: [Oggalileo],
   transports: {
-    [sepolia.id]: http(),
+    [Oggalileo.id]: http(),
   }
-})
+}) 
+
+
 const queryClient = new QueryClient()
 
 function MyApp({ Component, pageProps }) {
@@ -37,9 +57,10 @@ function MyApp({ Component, pageProps }) {
         initialChain={4}
         theme={darkTheme({
           accentColor: '#ED3968',
-          accentColorForeground: 'white',
+          accentColorForeground: 'whites',
           borderRadius: 'medium',
           modalBorder: '#F33A6A'
+
         })}
         
       >

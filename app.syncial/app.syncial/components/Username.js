@@ -45,11 +45,11 @@ const Profile = () => {
   return (
     <>
       <div className=" my-8">
-        <h1 className="text-[#ED3968] font-semibold text-lg">GM ☀️,</h1>
+        <h1 className="text-[#ED3968] font-semibold text-lg">GM,</h1>
         {loading ? (
           <p>Loading your username...</p>
         ) : username ? (
-          <div className="text-white text-5xl font-bold font-sans">{username}</div>
+          <div className="text-[#ED3968] text-5xl font-bold font-sans">{username} 👋</div>
         ) : (
           <p className="text-white">No username found. Please mint one!</p>
         )}

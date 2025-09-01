@@ -33,11 +33,11 @@ export default function Navbar() {
 
         {/* Right: Connect button & mobile menu toggle */}
         <div className="flex items-center space-x-5">
-        <div className="hidden md:block text-lg text-[#ED3968] font-semibold">
+        <div className="hidden md:block text-lg text-[#ED3968] font-semibold hover:text-white ">
           <Link href={'/'}>Feed</Link>
             
           </div>
-        <div className="hidden md:block text-lg text-[#ED3968] font-semibold">
+        <div className="hidden md:block text-lg text-[#ED3968] font-semibold hover:text-white ">
         <Link href={'/dashboard'}>Dashboard</Link>
           </div>
      

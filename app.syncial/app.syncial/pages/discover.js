@@ -1,9 +1,12 @@
+// pages/feed.js
 import { useEffect, useState } from "react";
+import { usePublicClient } from "wagmi";
 import { ethers } from "ethers";
-import PostCard from "../components/PostCard"; // you already have this
+import PostCard from "../components/PostCard";
 
-// contract details
+// ✅ Contract details
 const CONTRACT_ADDRESS = "0xA46B02adA701EB34Ad9AC8feB786F575208a4c46";
+
 const abi = [
   {
     "inputs": [],
@@ -16,7 +19,7 @@ const abi = [
           { "internalType": "string", "name": "image", "type": "string" },
           { "internalType": "uint256", "name": "timestamp", "type": "uint256" }
         ],
-        "internalType": "struct SocialPosts.Post[]",
+        "internalType": "struct Post[]",
         "name": "",
         "type": "tuple[]"
       }
@@ -27,34 +30,39 @@ const abi = [
 ];
 
 export default function FeedPage() {
+  const publicClient = usePublicClient(); 
   const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    async function loadFeed() {
-      try {
-        const provider = new ethers.BrowserProvider(window.ethereum);
-        const contract = new ethers.Contract(CONTRACT_ADDRESS, abi, provider);
-
-        const allPosts = await contract.getAllPosts();
-
-        console.log("Raw posts from contract:", allPosts);
-
-        // Normalize data: convert BigInt -> string/number
-        const formatted = allPosts.map((p) => ({
-          id: Number(p.id), // or p.id.toString() if very large
-          author: p.author,
-          image: p.image,
-          timestamp: Number(p.timestamp) * 1000 // ms for Date()
-        }));
-
-        setPosts(formatted);
-      } catch (err) {
-        console.error("Error loading feed:", err);
-      }
-    }
-
     loadFeed();
   }, []);
+
+  const loadFeed = async () => {
+    try {
+      setLoading(true);
+
+      // ✅ publicClient gives us a transport
+      const ethersProvider = new ethers.BrowserProvider(publicClient.transport);
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, abi, ethersProvider);
+
+      const allPosts = await contract.getAllPosts();
+      console.log("Raw posts:", allPosts);
+
+      const formatted = allPosts.map((p) => ({
+        id: Number(p.id),
+        author: p.author,
+        image: p.image,
+        timestamp: Number(p.timestamp) * 1000,
+      }));
+
+      setPosts(formatted);
+    } catch (err) {
+      console.error("Error loading feed:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="p-6 max-w-3xl mx-auto">

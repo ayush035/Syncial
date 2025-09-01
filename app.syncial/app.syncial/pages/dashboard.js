@@ -5,6 +5,7 @@ import ImageUpload from '../components/ImageUpload';
 import PostCard from '../components/PostCard';
 import { getContractService } from '../lib/contract';
 import toast from 'react-hot-toast';
+import Username from '@/components/Username'
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 export default function Dashboard() {
   const [userPosts, setUserPosts] = useState([]);
@@ -83,9 +84,10 @@ export default function Dashboard() {
     <div className="min-h-screen bg-black">
       <div className="container mx-auto px-4 py-8 max-w-2xl">
         {/* Header */}
+        <Username/>
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-[#ED3968] mb-2">
-            My Dashboard
+            Your Dashboard
           </h1>
           {/* <p className="text-gray-600">
             Manage your posts stored on 0G decentralized network

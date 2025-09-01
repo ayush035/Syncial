@@ -20,7 +20,7 @@ import Navbar from '@/components/Navbar';
 
 const Oggalileo = {
   id: 16601,
-  name: '0G-Galileo-Testnet',
+  name: '0G Galileo Testnet',
 
   iconBackground: '#fff',
   nativeCurrency: { name: 'OG', symbol: 'OG', decimals: 18 },

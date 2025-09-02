@@ -13,7 +13,7 @@ export default function SuccessModal({ onClose }) {
           <h1 className="text-4xl font-bold text-rose-100 mb-4">Congratulations 🎉</h1>
           <h2 className="text-3xl font-bold text-[#ED3968] mb-4">Welcome to Syncial Family!</h2>
           <p className="text-lg text-rose-100 mb-6">
-            You can now onboarded and ready to post bangers! <br /> We're rolling out exciting features so keep an eye on our socials!
+            You are now onboarded and ready to post bangers! <br /> We're rolling out exciting features so keep an eye on our socials!
           </p>
           <button
             onClick={onClose}

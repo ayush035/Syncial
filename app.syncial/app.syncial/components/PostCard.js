@@ -1,10 +1,14 @@
 import { useState } from 'react';
 import { ExternalLink, Calendar, User, AlertCircle } from 'lucide-react';
 import { zgStorage } from '../lib/0g-storage';
+import { useUsername } from '../hooks/useUsername'; // Import the custom hook
 
 export default function PostCard({ post, showAuthor = true }) {
   const [imageLoading, setImageLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
+  
+  // Use the custom hook to resolve username
+  const { username, loading: usernameLoading } = useUsername(post.author);
   
   const formatDate = (timestamp) => {
     return new Date(timestamp).toLocaleDateString('en-US', {
@@ -33,6 +37,13 @@ export default function PostCard({ post, showAuthor = true }) {
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
 
+  // Function to get display name (username or truncated address)
+  const getDisplayName = () => {
+    if (usernameLoading) return 'Loading...';
+    if (username) return username;
+    return truncateAddress(post.author);
+  };
+
   const imageUrl = zgStorage.getImageUrl(post.image);
 
   const handleImageLoad = () => {
@@ -49,7 +60,7 @@ export default function PostCard({ post, showAuthor = true }) {
   };
 
   return (
-    <div className="bg-black rounded-lg shadow-md overflow-hidden mb-6  outline outline-2 outline-[#39071f]">
+    <div className="bg-black rounded-lg shadow-md overflow-hidden mb-6 outline outline-2 outline-[#39071f]">
       {/* Header */}
       {showAuthor && (
         <div className="px-4 py-3 outline outline-2 outline-[#39071f]">
@@ -59,10 +70,22 @@ export default function PostCard({ post, showAuthor = true }) {
                 <User className="h-5 w-5 text-white" />
               </div>
               <div>
-                <p className="font-semibold text-white text-sm">
-                  {truncateAddress(post.author)}
-                </p>
-                <div className="flex items-center space-x-2 text-xs text-white">
+                <div className="flex items-center space-x-2">
+                  <p className="font-semibold text-white text-sm">
+                    {getDisplayName()}
+                  </p>
+                  {/* Show a small indicator when username is successfully resolved */}
+                  {username && !usernameLoading && (
+                    <span className="text-xs text-[#ED3968] opacity-75">✓</span>
+                  )}
+                </div>
+                {/* Show wallet address as subtitle when username is available */}
+                {username && !usernameLoading && (
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    {truncateAddress(post.author)}
+                  </p>
+                )}
+                <div className="flex items-center space-x-2 text-xs text-white mt-1">
                   <Calendar className="h-3 w-3" />
                   <span>{formatRelativeTime(post.timestamp)}</span>
                 </div>
@@ -70,9 +93,6 @@ export default function PostCard({ post, showAuthor = true }) {
             </div>
             
             <div className="flex items-center space-x-2">
-              {/* <span className="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded">
-                #{post.id}
-              </span> */}
               <button
                 onClick={() => openInNewTab(`https://chainscan-newton.0g.ai/`)}
                 className="text-gray-400 hover:text-gray-600"

@@ -34,7 +34,7 @@ export default function Navbar() {
         {/* Right: Connect button & mobile menu toggle */}
         <div className="flex items-center space-x-7">
         <div className="hidden md:flex text-lg text-[#ED3968] font-semibold hover:text-white ">
-          <Link href={'/'}>Predict</Link>
+          <Link href={'/predict'}>Predict</Link>
             
           </div>
         <div className="hidden md:flex text-lg text-[#ED3968] font-semibold hover:text-white ">

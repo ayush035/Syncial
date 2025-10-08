@@ -1,17 +1,16 @@
 import { useState } from 'react';
 import { ExternalLink, Calendar, User, AlertCircle } from 'lucide-react';
-import { zgStorage } from '../lib/0g-storage';
-import { useUsername } from '../hooks/useUsername'; // Import the custom hook
+import { useUsername } from '../hooks/useUsername'; // Custom hook
 
 export default function PostCard({ post, showAuthor = true }) {
   const [imageLoading, setImageLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
   
-  // Use the custom hook to resolve username
+  // Resolve username via custom hook
   const { username, loading: usernameLoading } = useUsername(post.author);
-  
+
   const formatDate = (timestamp) => {
-    return new Date(timestamp).toLocaleDateString('en-US', {
+    return new Date(Number(timestamp) * 1000).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -22,7 +21,7 @@ export default function PostCard({ post, showAuthor = true }) {
 
   const formatRelativeTime = (timestamp) => {
     const now = new Date();
-    const diff = now - new Date(timestamp);
+    const diff = now - new Date(Number(timestamp) * 1000);
     const minutes = Math.floor(diff / 60000);
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
@@ -37,19 +36,16 @@ export default function PostCard({ post, showAuthor = true }) {
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
 
-  // Function to get display name (username or truncated address)
   const getDisplayName = () => {
     if (usernameLoading) return 'Loading...';
     if (username) return username;
     return truncateAddress(post.author);
   };
 
-  const imageUrl = zgStorage.getImageUrl(post.image);
+  // Lighthouse gateway URL
+  const imageUrl = `https://gateway.lighthouse.storage/ipfs/${post.image}`;
 
-  const handleImageLoad = () => {
-    setImageLoading(false);
-  };
-
+  const handleImageLoad = () => setImageLoading(false);
   const handleImageError = () => {
     setImageLoading(false);
     setImageError(true);
@@ -74,12 +70,10 @@ export default function PostCard({ post, showAuthor = true }) {
                   <p className="font-semibold text-white text-sm">
                     {getDisplayName()}
                   </p>
-                  {/* Show a small indicator when username is successfully resolved */}
                   {username && !usernameLoading && (
                     <span className="text-xs text-[#ED3968] opacity-75">✓</span>
                   )}
                 </div>
-                {/* Show wallet address as subtitle when username is available */}
                 {username && !usernameLoading && (
                   <p className="text-xs text-gray-400 mt-0.5">
                     {truncateAddress(post.author)}
@@ -92,15 +86,15 @@ export default function PostCard({ post, showAuthor = true }) {
               </div>
             </div>
             
-            <div className="flex items-center space-x-2">
+            {/* <div className="flex items-center space-x-2">
               <button
-                onClick={() => openInNewTab(`https://chainscan-newton.0g.ai/`)}
+                onClick={() => openInNewTab(`https://explorer.lighthouse.storage/ipfs/${post.image}`)}
                 className="text-gray-400 hover:text-gray-600"
                 title="View on Explorer"
               >
                 <ExternalLink className="h-4 w-4" />
               </button>
-            </div>
+            </div> */}
           </div>
         </div>
       )}
@@ -109,7 +103,7 @@ export default function PostCard({ post, showAuthor = true }) {
       <div className="relative bg-[#16030d]">
         {imageLoading && (
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#ED3968]"></div>
           </div>
         )}
         
@@ -117,7 +111,7 @@ export default function PostCard({ post, showAuthor = true }) {
           <img
             src={imageUrl}
             alt={`Post ${post.id}`}
-            className={`w-full h-auto max-h-96 object-cover transition-opacity duration-300 ${
+            className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${
               imageLoading ? 'opacity-0' : 'opacity-100'
             }`}
             onLoad={handleImageLoad}
@@ -127,9 +121,9 @@ export default function PostCard({ post, showAuthor = true }) {
         ) : (
           <div className="w-full h-48 bg-[#16030d] flex flex-col items-center justify-center">
             <AlertCircle className="h-8 w-8 text-gray-400 mb-2" />
-            <p className="text-gray-500 text-sm">Failed to load from 0G Storage</p>
+            <p className="text-gray-500 text-sm">Failed to load from Lighthouse</p>
             <p className="text-xs text-gray-400 mt-1 px-4 text-center">
-              Root Hash: {post.image.slice(0, 16)}...
+              IPFS Hash: {post.image.slice(0, 20)}...
             </p>
             <button
               onClick={() => window.location.reload()}
@@ -145,7 +139,7 @@ export default function PostCard({ post, showAuthor = true }) {
       <div className="px-4 py-3 bg-black">
         <div className="flex items-center justify-between text-xs text-gray-500">
           <div className="flex items-center space-x-4">
-            <span>Stored on 0G Network</span>
+            <span>Stored on Lighthouse</span>
             <span>•</span>
             <span>{formatDate(post.timestamp)}</span>
           </div>

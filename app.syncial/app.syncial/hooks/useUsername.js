@@ -3,7 +3,7 @@ import { useWalletClient } from "wagmi";
 import { ethers } from "ethers";
 
 // 0G Galileo Testnet contract details
-const CONTRACT_ADDRESS = "0x0E51e917f9B397CF654Ad009B2b60ae2d7525b46";
+const CONTRACT_ADDRESS = "0x075139B060F0B076fA27620196dCbFE791e9C80A";
 const ABI = [
   {
     inputs: [{ internalType: "address", name: "_wallet", type: "address" }],

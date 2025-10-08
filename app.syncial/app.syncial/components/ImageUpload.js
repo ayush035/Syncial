@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useAccount, useWalletClient, usePublicClient } from 'wagmi';
 import { Upload, X, Image as ImageIcon } from 'lucide-react';
-import { zgStorage } from '@/lib/0g-storage';
+import lighthouse from '@lighthouse-web3/sdk';
 import { getContractService } from '@/lib/contract';
 import toast from 'react-hot-toast';
+
+const LIGHTHOUSE_API_KEY = "2a1e5ae6.a7eead833e1a4f0fb4d11c0bbdd0b236"; // 🔑 Replace with env variable later
 
 export default function ImageUpload({ onUploadSuccess }) {
   const [uploading, setUploading] = useState(false);
@@ -47,14 +49,13 @@ export default function ImageUpload({ onUploadSuccess }) {
     }
   };
 
-  // Upload workflow using simplified method
+  // Upload workflow with Lighthouse
   const uploadPost = async () => {
     if (!selectedFile || !address) {
       toast.error('Please select a file and ensure wallet is connected');
       return;
     }
 
-    // Check if we can create contract service
     if (!publicClient) {
       toast.error('Wallet connection not ready. Please try again.');
       return;
@@ -64,34 +65,39 @@ export default function ImageUpload({ onUploadSuccess }) {
     const loadingToast = toast.loading('Preparing upload...');
 
     try {
-      // Step 1: Upload image using simplified method (avoids Node.js dependencies)
-      toast.loading('Processing image...', { id: loadingToast });
+      // Step 1: Upload image to Lighthouse
+      toast.loading('Uploading image to Lighthouse...', { id: loadingToast });
       console.log('Starting upload for file:', selectedFile.name);
-      
-      const uploadResult = await zgStorage.uploadImage(selectedFile, walletClient);
-      console.log('Upload successful:', uploadResult);
-      
-      // Step 2: Create post on smart contract with hash
+
+      const output = await lighthouse.upload(
+        [selectedFile],
+        LIGHTHOUSE_API_KEY,
+        false
+      );
+
+      console.log('Lighthouse upload result:', output);
+
+      const ipfsHash = output.data.Hash;
+      const gatewayUrl = `https://gateway.lighthouse.storage/ipfs/${ipfsHash}`;
+
+      // Step 2: Call contract with IPFS hash
       toast.loading('Creating post on blockchain...', { id: loadingToast });
-      console.log('Creating post with root hash:', uploadResult.rootHash);
-      
-      // Pass wagmi clients to contract service
       const contractService = getContractService(publicClient, walletClient);
-      const contractResult = await contractService.createPost(uploadResult.rootHash);
+      const contractResult = await contractService.createPost(ipfsHash);
+
       console.log('Contract transaction successful:', contractResult);
-      
+
       if (contractResult.success) {
         toast.success('Post created successfully!', { id: loadingToast });
         
-        // Reset form
         setSelectedFile(null);
-        
-        // Callback to parent component
+
         if (onUploadSuccess) {
           onUploadSuccess({
-            ...uploadResult,
+            ipfsHash,
+            gatewayUrl,
             contractTx: contractResult.hash,
-            postCreated: true
+            postCreated: true,
           });
         }
       } else {
@@ -100,8 +106,7 @@ export default function ImageUpload({ onUploadSuccess }) {
 
     } catch (error) {
       console.error('Upload failed:', error);
-      
-      // Better error handling
+
       let errorMessage = 'Upload failed';
       if (error.message.includes('wallet provider')) {
         errorMessage = 'Wallet connection issue. Please reconnect and try again.';
@@ -110,7 +115,7 @@ export default function ImageUpload({ onUploadSuccess }) {
       } else if (error.message) {
         errorMessage = `Upload failed: ${error.message}`;
       }
-      
+
       toast.error(errorMessage, { id: loadingToast });
     } finally {
       setUploading(false);
@@ -218,7 +223,7 @@ export default function ImageUpload({ onUploadSuccess }) {
         
         {selectedFile && !uploading && (
           <div className="text-xs text-gray-500 text-center">
-            Your image will be stored securely and linked to your wallet
+            Your image will be stored on <span className="text-[#ED3968]">Lighthouse</span> and linked to your wallet
           </div>
         )}
       </div>

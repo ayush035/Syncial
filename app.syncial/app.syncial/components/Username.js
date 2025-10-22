@@ -17,8 +17,6 @@ const ABI = [
 ];
 
 // Public RPC endpoint for 0G Galileo Testnet
-const PUBLIC_RPC = "https://evmrpc-testnet.0g.ai";
-
 export default function Profile() {
   const { address } = useAccount();
   const { data: walletClient } = useWalletClient();

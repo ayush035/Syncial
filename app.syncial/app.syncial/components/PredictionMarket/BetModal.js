@@ -22,13 +22,13 @@ const BetModal = ({ pollId, onClose, onSuccess }) => {
     }
 
     if (parseFloat(amount) < 1) {
-      setError('Minimum bet is 1 HBAR');
+      setError('Minimum bet is 1 ETH');
       return;
     }
 
     // Check balance
     if (balance && parseEther(amount.toString()) > balance.value) {
-      setError(`Insufficient balance. You have ${parseFloat(formatEther(balance.value)).toFixed(4)} HBAR`);
+      setError(`Insufficient balance. You have ${parseFloat(formatEther(balance.value)).toFixed(4)} ETH`);
       return;
     }
 
@@ -44,9 +44,9 @@ const BetModal = ({ pollId, onClose, onSuccess }) => {
       if (err.message.includes('Poll ended')) {
         errorMessage += 'This poll has ended and no longer accepts bets.';
       } else if (err.message.includes('Bet below $1')) {
-        errorMessage += 'Minimum bet is $1 USD equivalent in HBAR.';
+        errorMessage += 'Minimum bet is $1 USD equivalent in ETH.';
       } else if (err.message.includes('insufficient funds')) {
-        errorMessage += 'Insufficient HBAR balance for this bet plus gas fees.';
+        errorMessage += 'Insufficient ETH balance for this bet plus gas fees.';
       } else if (err.message.includes('User rejected')) {
         errorMessage += 'Transaction was cancelled.';
       } else if (err.message.includes('gas')) {
@@ -84,7 +84,7 @@ const BetModal = ({ pollId, onClose, onSuccess }) => {
         {balance && (
           <div className="mb-4 p-2 rounded">
             <p className="text-xs text-gray-100">
-              Available: {parseFloat(formatEther(balance.value)).toFixed(4)} HBAR
+              Available: {parseFloat(formatEther(balance.value)).toFixed(4)} ETH
             </p>
           </div>
         )}
@@ -152,13 +152,13 @@ const BetModal = ({ pollId, onClose, onSuccess }) => {
 
           <div className="mb-6">
             <label className="block text-white text-sm font-bold mb-2">
-              Amount (HBAR)
+              Amount (ETH)
             </label>
             <div className="relative">
               <input
                 type="number"
-                step="5"
-                min="5"
+                step="0.5"
+                min="0.0001"
                 max={balance ? formatEther(balance.value) : undefined}
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
@@ -171,7 +171,7 @@ const BetModal = ({ pollId, onClose, onSuccess }) => {
                 type="button"
                 onClick={() => {
                   if (balance) {
-                    const maxAmount = Math.max(0, parseFloat(formatEther(balance.value)) - 0.01); // Leave some for gas
+                    const maxAmount = Math.max(0, parseFloat(formatEther(balance.value)) - 0.0000001); // Leave some for gas
                     setAmount(maxAmount.toFixed(4));
                   }
                 }}
@@ -182,8 +182,8 @@ const BetModal = ({ pollId, onClose, onSuccess }) => {
               </button>
             </div>
             <div className="flex justify-between text-xs text-gray-100 mt-1">
-              <span>Minimum: 1 HBAR</span>
-              <span>~1 HBAR minimum</span>
+              <span>Minimum: 0.001 ETH</span>
+              <span>~0.001 ETH minimum</span>
             </div>
           </div>
 
@@ -212,11 +212,11 @@ const BetModal = ({ pollId, onClose, onSuccess }) => {
             <div className="mt-4 p-3 bg-blue-50 rounded border">
               <p className="text-sm font-semibold text-blue-800">Bet Summary:</p>
               <p className="text-xs text-blue-700">
-                Betting {amount} HBAR on <strong>{option ? 'YES' : 'NO'}</strong>
+                Betting {amount} ETH on <strong>{option ? 'YES' : 'NO'}</strong>
               </p>
               {balance && (
                 <p className="text-xs text-blue-600">
-                  Remaining balance: ~{(parseFloat(formatEther(balance.value)) - parseFloat(amount) - 0.01).toFixed(4)} HBAR
+                  Remaining balance: ~{(parseFloat(formatEther(balance.value)) - parseFloat(amount) - 0.01).toFixed(4)} ETH
                 </p>
               )}
             </div>

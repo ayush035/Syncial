@@ -81,21 +81,21 @@ const PollCard = ({ pollId }) => {
     </div>;
   }
 
-  const convertToHBAR = (value) => {
+  const convertToETH = (value) => {
     if (!value) return '0.0000';
     const num = typeof value === 'bigint' ? Number(value) : Number(value);
     return (num / 1e8).toFixed(4);
   };
 
-  const totalYesHBAR = convertToHBAR(totalYes);
-  const totalNoHBAR = convertToHBAR(totalNo);
-  const totalPoolHBAR = (parseFloat(totalYesHBAR) + parseFloat(totalNoHBAR)).toFixed(4);
+  const totalYesETH = convertToETH(totalYes);
+  const totalNoETH = convertToETH(totalNo);
+  const totalPoolETH = (parseFloat(totalYesETH) + parseFloat(totalNoETH)).toFixed(4);
 
-  const userYesHBAR = userBets ? convertToHBAR(userBets[0]) : '0.0000';
-  const userNoHBAR = userBets ? convertToHBAR(userBets[1]) : '0.0000';
+  const userYesETH = userBets ? convertToETH(userBets[0]) : '0.0000';
+  const userNoETH = userBets ? convertToETH(userBets[1]) : '0.0000';
 
-  const maxPriceHBAR = convertToHBAR(maxPriceDuringPoll);
-  const targetPriceHBAR = convertToHBAR(targetPrice);
+  const maxPriceETH = convertToETH(maxPriceDuringPoll);
+  const targetPriceETH = convertToETH(targetPrice);
 
   // Fixed time comparison - handle both seconds and milliseconds timestamps
   const now = Date.now();
@@ -201,11 +201,11 @@ const PollCard = ({ pollId }) => {
 
       {/* Poll Stats */}
       <div className="text-md text-white mb-4">
-        <p>Total Pool: <span className="font-semibold">{totalPoolHBAR} HBAR</span></p>
-        <p>Yes Pool: <span className="font-semibold">{totalYesHBAR} HBAR</span></p>
-        <p>No Pool: <span className="font-semibold">{totalNoHBAR} HBAR</span></p>
-        <p>Max Price During Poll: <span className="font-semibold">{maxPriceHBAR}</span></p>
-        <p>Target Price: <span className="font-semibold">{targetPriceHBAR}</span></p>
+        <p>Total Pool: <span className="font-semibold">{totalPoolETH} ETH</span></p>
+        <p>Yes Pool: <span className="font-semibold">{totalYesETH} ETH</span></p>
+        <p>No Pool: <span className="font-semibold">{totalNoETH} ETH</span></p>
+        <p>Max Price During Poll: <span className="font-semibold">{maxPriceETH}</span></p>
+        <p>Target Price: <span className="font-semibold">{targetPriceETH}</span></p>
         <p>Host: <span className="font-mono text-xs">{host.slice(0, 6)}...{host.slice(-4)}</span></p>
         <p>End Time: {new Date(pollEndTime).toLocaleString()}</p>
         {/* Debug info - remove in production */}
@@ -215,12 +215,12 @@ const PollCard = ({ pollId }) => {
       </div>
 
       {/* User Bets */}
-      {(parseFloat(userYesHBAR) > 0 || parseFloat(userNoHBAR) > 0) && (
+      {(parseFloat(userYesETH) > 0 || parseFloat(userNoETH) > 0) && (
         <div className="mb-4 p-3 bg-[#16030d]  rounded">
           <p className="text-sm font-semibold text-White mb-1">Your Bets:</p>
           <div className="flex gap-4 text-sm">
-            <span className="text-[#ED3968]">YES: {userYesHBAR} HBAR</span>
-            <span className="text-white">NO: {userNoHBAR} HBAR</span>
+            <span className="text-[#ED3968]">YES: {userYesETH} ETH</span>
+            <span className="text-white">NO: {userNoETH} ETH</span>
           </div>
         </div>
       )}

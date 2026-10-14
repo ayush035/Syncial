@@ -1,5 +1,5 @@
 export const USERNAME_CONTRACT = {
-    address: "0x075139B060F0B076fA27620196dCbFE791e9C80A", // Your username contract address
+    address: "0x0Eb52b91AaEdac88F7f7fCE6FAa7a6B4B4AA952C", // Your username contract address
     abi: [
         {
             "anonymous": false,

@@ -17,20 +17,31 @@ export const useContract = () => {
         pollData.question,
         BigInt(pollData.duration),
         pollData.assetPriceId,
-        pollData.hbarPriceId,
         BigInt(pollData.targetPrice),
       ],
       gas: 800000n,
     });
   };
 
-  const placeBet = async (pollId, option, amount) => {
+  // ERC-20 USDC Bet (6 decimals)
+  const placeBet = async (pollId, option, amountUSDC6) => {
     return writeContractAsync({
       address: PREDICTION_MARKET_ADDRESS,
       abi: CONTRACT_ABI,
       functionName: 'placeBet',
-      args: [BigInt(pollId), option], // option is true/false
-      value: amount, // already parseEther before passing in
+      args: [BigInt(pollId), option, amountUSDC6],
+      gas: 500000n,
+    });
+  };
+
+  // Native Arc USDC Bet (18 decimals via msg.value)
+  const placeBetNative = async (pollId, option, amountNativeWei) => {
+    return writeContractAsync({
+      address: PREDICTION_MARKET_ADDRESS,
+      abi: CONTRACT_ABI,
+      functionName: 'placeBetNative',
+      args: [BigInt(pollId), option],
+      value: amountNativeWei,
       gas: 500000n,
     });
   };
@@ -59,6 +70,7 @@ export const useContract = () => {
   return {
     createPoll,
     placeBet,
+    placeBetNative,
     resolvePoll,
     updateMaxPrice,
     hash,

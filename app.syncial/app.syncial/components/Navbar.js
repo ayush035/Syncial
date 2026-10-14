@@ -1,98 +1,124 @@
 import Link from "next/link";
+import { useRouter } from "next/router";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import Image from "next/image";
-import { Search, Menu } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { useState } from "react";
 import logo from "@/public/logo.jpg";
 import SearchFollowUser from "./SearchFollowUser";
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const router = useRouter();
+
+  const navLinks = [
+    { href: "/predict", label: "Predict" },
+    { href: "/discover", label: "Discover" },
+    { href: "/dashboard", label: "Dashboard" },
+  ];
+
+  const isActive = (path) => router.pathname === path;
 
   return (
-    <div className="text-white flex flex-col">
-      <nav className="flex justify-between items-center px-4 md:px-24 py-4 bg-black">
-        {/* Left: Logo + Search bar */}
-        <div className="flex items-center">
-          <Link href="/">
-            <Image
-              src={logo}
-              alt="Syncial Logo"
-              className="w-28 h-auto md:w-[230px] md:h-auto"
-            />
-          </Link>
-        </div>
-
-        {/* Right: Connect button & mobile menu toggle */}
-        <div className="flex items-center space-x-7">
-          <div className="hidden md:flex text-lg text-[#ED3968] font-semibold hover:text-white">
-            <Link href={'/predict'}>Predict</Link>
-          </div>
-          <div className="hidden md:flex text-lg text-[#ED3968] font-semibold hover:text-white">
-            <Link href={'/discover'}>Discover</Link>
-          </div>
-          <div className="hidden md:flex text-lg text-[#ED3968] font-semibold hover:text-white">
-            <Link href={'/dashboard'}>Dashboard</Link>
-          </div>
+    <header className="border-b border-[#27272A] bg-[#09090B]/90 backdrop-blur-md sticky top-0 z-40">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        <div className="flex justify-between items-center h-16">
           
-          {/* Desktop Search */}
-          <div className='hidden md:block'>
-            <SearchFollowUser />
+          {/* Left: Brand + Chain Indicator */}
+          <div className="flex items-center space-x-3 sm:space-x-4">
+            <Link href="/" className="flex items-center">
+              <Image
+                src={logo}
+                alt="Syncial Logo"
+                className="w-24 sm:w-28 h-auto rounded"
+                priority
+              />
+            </Link>
+
+            {/* Single quiet Arc indicator */}
+            <span className="inline-flex items-center text-[11px] font-mono text-zinc-300 bg-zinc-900 border border-zinc-800 px-2.5 py-1 rounded-md">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#ED3968] mr-1.5 animate-pulse" />
+              Arc Mainnet
+            </span>
           </div>
-     
-          <div className="hidden md:block">
-            <ConnectButton />
+
+          {/* Center: Clean Nav Links */}
+          <nav className="hidden md:flex items-center space-x-1">
+            {navLinks.map((link) => {
+              const active = isActive(link.href);
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                    active
+                      ? "text-[#ED3968] bg-[#ED3968]/10 border border-[#ED3968]/25"
+                      : "text-zinc-400 hover:text-white hover:bg-zinc-900"
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
+          </nav>
+
+          {/* Right: Search & Connect Wallet */}
+          <div className="flex items-center space-x-3">
+            <div className="hidden lg:block">
+              <SearchFollowUser />
+            </div>
+
+            <div className="hidden sm:block">
+              <ConnectButton
+                showBalance={false}
+                chainStatus="none"
+                accountStatus={{
+                  smallScreen: 'avatar',
+                  largeScreen: 'avatar',
+                }}
+              />
+            </div>
+
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-1.5 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800"
+              aria-label="Toggle navigation"
+            >
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
           </div>
-         
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden text-[#ED3968]"
-            aria-label="Toggle menu"
-          >
-            <Menu className="w-6 h-6" />
-          </button>
         </div>
-      </nav>
+      </div>
 
-      {/* Mobile Menu (drawer) */}
+      {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="bg-[#16030d] text-white p-4 md:hidden space-y-4">
-          {/* Mobile Search - Added at the top */}
-          <div className="mb-4">
+        <div className="md:hidden border-t border-zinc-800 bg-[#09090B] px-4 py-4 space-y-3">
+          <div className="mb-2">
             <SearchFollowUser />
           </div>
 
-          {/* Mobile Nav Links */}
-          <div className="flex flex-col space-y-3 text-lg font-semibold">
-            <Link 
-              href="/predict" 
-              className="text-[#ED3968] hover:text-white"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Predict
-            </Link>
-            <Link 
-              href="/discover" 
-              className="text-[#ED3968] hover:text-white"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Discover
-            </Link>
-            <Link 
-              href="/dashboard" 
-              className="text-[#ED3968] hover:text-white"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Dashboard
-            </Link>
+          <div className="flex flex-col space-y-1">
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setMobileMenuOpen(false)}
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition ${
+                  isActive(link.href)
+                    ? "bg-[#ED3968]/10 text-[#ED3968] border border-[#ED3968]/20"
+                    : "text-zinc-400 hover:text-white"
+                }`}
+              >
+                {link.label}
+              </Link>
+            ))}
           </div>
 
-          {/* Mobile Connect Button */}
-          <div className="pt-2">
-            <ConnectButton />
+          <div className="pt-2 border-t border-zinc-800 flex justify-center">
+            <ConnectButton showBalance={false} chainStatus="none" />
           </div>
         </div>
       )}
-    </div>
+    </header>
   );
 }

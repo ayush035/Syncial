@@ -1,30 +1,29 @@
-// components/UsernameSearch.jsx
 import { useState, useEffect, useRef } from 'react';
 import { useAccount, useReadContract } from 'wagmi';
 import { useUsernameContract } from '../hooks/useUsernameContract';
 import { useSocialGraphContract, useIsFollowing } from '../hooks/useSocialGraphContract';
+import { Search, X, Loader2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function UsernameSearch() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResult, setSearchResult] = useState(null);
   const [showDropdown, setShowDropdown] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
+  const [searching, setSearching] = useState(false);
   const dropdownRef = useRef(null);
-  
+
   const { address: currentUserAddress, isConnected } = useAccount();
   const { contractAddress: usernameContractAddress, abi: usernameAbi } = useUsernameContract();
-  const { followUser, unfollowUser, isConfirming, isConfirmed, isPending, error: txError } = useSocialGraphContract();
+  const { followUser, unfollowUser, isConfirming, isPending } = useSocialGraphContract();
 
-  // Get wallet from username
-  const { data: walletAddress, refetch: refetchWallet, isLoading: isSearching } = useReadContract({
+  const { data: walletAddress, refetch: refetchWallet } = useReadContract({
     address: usernameContractAddress,
     abi: usernameAbi,
     functionName: 'usernames',
-    args: [searchQuery],
-    enabled: false, // Manual trigger
+    args: [searchQuery.trim().toLowerCase()],
+    enabled: false,
   });
 
-  // Get username from wallet (to verify)
   const { data: verifiedUsername, refetch: refetchUsername } = useReadContract({
     address: usernameContractAddress,
     abi: usernameAbi,
@@ -33,244 +32,144 @@ export default function UsernameSearch() {
     enabled: false,
   });
 
-  // Check if current user is following the searched user
-  const { isFollowing, refetch: refetchFollowStatus, isLoading: isCheckingFollowStatus } = useIsFollowing(
+  const { isFollowing, refetch: refetchFollowStatus } = useIsFollowing(
     currentUserAddress,
     searchResult?.address
   );
 
-  // Close dropdown when clicking outside - BUT NOT when clicking inside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowDropdown(false);
       }
     };
-
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Refetch follow status when transaction is confirmed
-  useEffect(() => {
-    if (isConfirmed) {
-      refetchFollowStatus();
-      setErrorMsg('');
-    }
-  }, [isConfirmed, refetchFollowStatus]);
-
-  // Handle transaction errors
-  useEffect(() => {
-    if (txError) {
-      console.error('Transaction error:', txError);
-      setErrorMsg(txError.message || 'Transaction failed');
-    }
-  }, [txError]);
-
   const handleSearch = async () => {
-    if (!searchQuery.trim()) {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) {
       setSearchResult(null);
       return;
     }
 
+    setSearching(true);
     setShowDropdown(true);
-    setErrorMsg('');
 
     try {
-      // Get wallet from username
       const { data: wallet } = await refetchWallet();
-      
-      console.log('Search result wallet:', wallet); // Debug
-
       if (wallet && wallet !== '0x0000000000000000000000000000000000000000') {
-        // Verify username
-        const { data: username } = await refetchUsername();
-        
-        console.log('Verified username:', username); // Debug
-
+        const { data: uName } = await refetchUsername();
         setSearchResult({
-          username: username || searchQuery,
+          username: uName || q,
           address: wallet,
-          isCurrentUser: wallet.toLowerCase() === currentUserAddress?.toLowerCase()
+          isCurrentUser: wallet.toLowerCase() === currentUserAddress?.toLowerCase(),
         });
-
-        // Refetch follow status
         if (currentUserAddress) {
           await refetchFollowStatus();
         }
       } else {
         setSearchResult({ error: 'User not found' });
       }
-    } catch (error) {
-      console.error('Search error:', error);
-      setSearchResult({ error: 'Error searching for user' });
+    } catch {
+      setSearchResult({ error: 'Search failed' });
+    } finally {
+      setSearching(false);
     }
   };
 
   const handleFollowToggle = async (e) => {
-    // CRITICAL: Stop event from bubbling up
     e.stopPropagation();
-    e.preventDefault();
-    
-    // Debug logs - These MUST appear if button is clicked
-    console.log('🔴 FOLLOW BUTTON CLICKED!');
-    console.log('Current user:', currentUserAddress);
-    console.log('Target user:', searchResult?.address);
-    console.log('Is connected:', isConnected);
-    console.log('Is following:', isFollowing);
-
-    // Check wallet connection
     if (!isConnected) {
-      alert('Please connect your wallet first');
-      setErrorMsg('Please connect your wallet first');
+      toast.error('Connect wallet first');
       return;
     }
 
-    // Validate search result
-    if (!searchResult || searchResult.error || searchResult.isCurrentUser) {
-      console.log('❌ Invalid operation');
-      return;
-    }
+    if (!searchResult?.address || searchResult.isCurrentUser) return;
 
-    setErrorMsg('');
-
+    const toastId = toast.loading(isFollowing ? 'Unfollowing...' : 'Following...');
     try {
       if (isFollowing) {
-        console.log('🔵 Calling unfollowUser...');
         await unfollowUser(searchResult.address);
+        toast.success(`Unfollowed @${searchResult.username}`, { id: toastId });
       } else {
-        console.log('🟢 Calling followUser...');
         await followUser(searchResult.address);
+        toast.success(`Following @${searchResult.username}`, { id: toastId });
       }
-    } catch (error) {
-      console.error('Follow/Unfollow error:', error);
-      
-      // Better error messages
-      if (error.message?.includes('user rejected')) {
-        setErrorMsg('Transaction cancelled by user');
-      } else if (error.message?.includes('insufficient funds')) {
-        setErrorMsg('Insufficient funds for gas fee');
-      } else {
-        setErrorMsg(error.shortMessage || error.message || 'Transaction failed. Please try again.');
-      }
-    }
-  };
-
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
-      handleSearch();
+      setTimeout(() => refetchFollowStatus(), 1000);
+    } catch {
+      toast.error('Action failed', { id: toastId });
     }
   };
 
   return (
     <div className="relative" ref={dropdownRef}>
-      <div className="flex items-center gap-2">
+      <div className="relative flex items-center">
+        <Search className="w-3.5 h-3.5 text-zinc-500 absolute left-3 pointer-events-none" />
         <input
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          onKeyPress={handleKeyPress}
-          onFocus={() => searchResult && setShowDropdown(true)}
-          placeholder="Search"
-          className="px-4 py-2 outline outline-1 outline-[#39071f] rounded-lg focus:outline-none focus:ring-1 focus:ring-rose-500 w-64 text-rose-100 bg-[#16030d] text-lg w-full h-full"
+          onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+          placeholder="Search @handle"
+          className="w-40 sm:w-52 bg-zinc-900 border border-zinc-800 focus:border-zinc-600 rounded-lg py-1.5 pl-8 pr-7 text-xs text-white placeholder-zinc-500 outline-none transition"
         />
-        <button
-          onClick={handleSearch}
-          disabled={isSearching || !searchQuery.trim()}
-          className="px-4 py-2 bg-[#ED3968] text-white rounded-lg hover:bg-rose-400 cursor-pointer disabled:bg-rose-400 disabled:cursor-not-allowed transition-colors"
-        >
-          {isSearching ? 'Searching...' : 'Search'}
-        </button>
+        {searchQuery ? (
+          <button
+            onClick={() => {
+              setSearchQuery('');
+              setSearchResult(null);
+              setShowDropdown(false);
+            }}
+            className="absolute right-2 text-zinc-500 hover:text-white"
+          >
+            <X className="w-3 h-3" />
+          </button>
+        ) : null}
       </div>
 
-      {/* Search Results Dropdown */}
-      {showDropdown && searchResult && (
-        <div 
-          className="absolute top-full mt-2 left-0 bg-[#16030d] text-white  rounded-lg shadow-xl z-[9999] min-w-[450px]"
-          onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside
+      {showDropdown && (
+        <div
+          className="absolute top-full mt-1.5 right-0 bg-[#121215] border border-zinc-800 rounded-xl shadow-xl z-50 min-w-[280px] p-2.5 text-xs"
+          onClick={(e) => e.stopPropagation()}
         >
-          {searchResult.error ? (
-            <div className="p-4 text-red-600 text-center">
+          {searching ? (
+            <div className="py-4 text-center text-zinc-500 flex items-center justify-center space-x-1.5">
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              <span>Searching...</span>
+            </div>
+          ) : searchResult?.error ? (
+            <div className="py-2.5 text-center text-zinc-500">
               {searchResult.error}
             </div>
-          ) : (
-            <div className="p-4">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-white text-lg">
-                    {searchResult.username}
-                  </div>
-                  <div className="text-xs text-rose-200 font-mono truncate mt-1">
-                    {searchResult.address}
-                  </div>
-                  {searchResult.isCurrentUser && (
-                    <span className="text-xs text-white mt-2 inline-block font-medium">
-                      (You)
-                    </span>
-                  )}
+          ) : searchResult ? (
+            <div className="flex items-center justify-between p-2 rounded-lg bg-zinc-900/60">
+              <div className="min-w-0 pr-2">
+                <div className="font-semibold text-white truncate">
+                  @{searchResult.username}
                 </div>
-                
-                {!searchResult.isCurrentUser && (
-                  <button
-                    onClick={handleFollowToggle}
-                    onMouseDown={(e) => {
-                      console.log('🟡 Button mousedown event fired'); // Additional test
-                    }}
-                    disabled={isPending || isConfirming || !isConnected}
-                    className={`
-                      flex-shrink-0 px-6 py-2.5 rounded-lg font-medium 
-                      transition-all duration-200 
-                      disabled:opacity-50 disabled:cursor-not-allowed
-                      ${isFollowing
-                        ? 'bg-[#ED3968] text-gray-800 hover:bg-rose-400 active:bg-[#ED3968]'
-                        : 'bg-[#ED3968] text-white hover:bg-rose-400 active:bg-[#ED3968]'
-                      }
-                    `}
-                    style={{ pointerEvents: 'auto' }} // Force button to be clickable
-                    type="button" // Explicit button type
-                  >
-                    {isPending ? '⏳ Confirming...' : 
-                     isConfirming ? '⏳ Processing...' : 
-                     isCheckingFollowStatus ? '⏳ Loading...' :
-                     isFollowing ? 'Unfollow' : 'Follow'}
-                  </button>
-                )}
+                <div className="text-[10px] font-mono text-zinc-500 truncate">
+                  {searchResult.address.slice(0, 6)}...{searchResult.address.slice(-4)}
+                </div>
               </div>
 
-              {/* Status Messages */}
-              {isPending && (
-                <div className="mt-3 text-sm text-blue-600 bg-blue-50 p-3 rounded-lg border border-blue-200">
-                  ⏳ Please confirm the transaction in your wallet...
-                </div>
-              )}
-              
-              {isConfirming && (
-                <div className="mt-3 text-sm text-yellow-600 bg-yellow-50 p-3 rounded-lg border border-yellow-200">
-                  ⏳ Transaction confirming on blockchain...
-                </div>
-              )}
-              
-              {isConfirmed && (
-                <div className="mt-3 text-sm text-green-600 bg-green-50 p-3 rounded-lg border border-green-200">
-                  ✅ Transaction confirmed successfully!
-                </div>
-              )}
-
-              {/* Error Message */}
-              {errorMsg && (
-                <div className="mt-3 text-sm text-red-600 bg-red-50 p-3 rounded-lg border border-red-200">
-                  ❌ {errorMsg}
-                </div>
-              )}
-
-              {/* Wallet Connection Warning */}
-              {!isConnected && !searchResult.isCurrentUser && (
-                <div className="mt-3 text-sm text-orange-600 bg-orange-50 p-3 rounded-lg border border-orange-200">
-                  ⚠️ Please connect your wallet to follow users
-                </div>
+              {!searchResult.isCurrentUser && (
+                <button
+                  type="button"
+                  onClick={handleFollowToggle}
+                  disabled={isPending || isConfirming || !isConnected}
+                  className={`px-3 py-1 rounded-md text-xs font-medium transition cursor-pointer ${
+                    isFollowing
+                      ? 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
+                      : 'bg-[#ED3968] text-white hover:bg-[#F45B82]'
+                  }`}
+                >
+                  {isFollowing ? 'Following' : 'Follow'}
+                </button>
               )}
             </div>
-          )}
+          ) : null}
         </div>
       )}
     </div>

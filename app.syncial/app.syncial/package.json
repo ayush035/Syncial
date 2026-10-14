@@ -47,7 +47,10 @@
     "wagmi": "^2.15.4"
   },
   "devDependencies": {
+    "@openzeppelin/contracts": "^5.6.1",
     "@tailwindcss/postcss": "^4",
+    "eslint": "^9.39.5",
+    "solc": "^0.8.20",
     "tailwindcss": "^4.1.4"
   }
 }

@@ -1,21 +1,10 @@
 import { useEffect, useState } from "react";
 import { useWalletClient } from "wagmi";
 import { ethers } from "ethers";
+import { USERNAME_CONTRACT } from "@/lib/username_congif";
 
-// 0G Galileo Testnet contract details
-const CONTRACT_ADDRESS = "0x075139B060F0B076fA27620196dCbFE791e9C80A";
-const ABI = [
-  {
-    inputs: [{ internalType: "address", name: "_wallet", type: "address" }],
-    name: "checkUsernameFromRainbow",
-    outputs: [{ internalType: "string", name: "", type: "string" }],
-    stateMutability: "view",
-    type: "function",
-  },
-];
-
-// Public RPC endpoint for 0G Galileo Testnet
-const PUBLIC_RPC = "https://evmrpc-testnet.0g.ai";
+// Public RPC endpoint for Arc Mainnet
+const PUBLIC_RPC = "https://rpc.mainnet.arc.io";
 
 // Cache to avoid repeated calls for the same address
 const usernameCache = new Map();
@@ -32,8 +21,8 @@ export function useUsername(walletAddress) {
     }
 
     // Check cache first
-    if (usernameCache.has(walletAddress)) {
-      setUsername(usernameCache.get(walletAddress));
+    if (usernameCache.has(walletAddress.toLowerCase())) {
+      setUsername(usernameCache.get(walletAddress.toLowerCase()));
       return;
     }
 
@@ -46,23 +35,19 @@ export function useUsername(walletAddress) {
       let provider;
 
       if (walletClient) {
-        // Use wagmi wallet client (works for desktop + mobile)
         provider = new ethers.BrowserProvider(walletClient.transport);
       } else {
-        // Fallback to public RPC if no wallet connected
         provider = new ethers.JsonRpcProvider(PUBLIC_RPC);
       }
 
-      const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, provider);
+      const contract = new ethers.Contract(USERNAME_CONTRACT.address, USERNAME_CONTRACT.abi, provider);
       const resolvedUsername = await contract.checkUsernameFromRainbow(address);
 
-      // Cache the result
-      usernameCache.set(address, resolvedUsername);
-      setUsername(resolvedUsername);
+      const result = resolvedUsername || "";
+      usernameCache.set(address.toLowerCase(), result);
+      setUsername(result);
     } catch (err) {
-      console.error("Error resolving username:", err);
-      // Cache empty string to avoid repeated failed calls
-      usernameCache.set(address, "");
+      usernameCache.set(address.toLowerCase(), "");
       setUsername("");
     } finally {
       setLoading(false);

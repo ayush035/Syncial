@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useAccount, usePublicClient, useWalletClient } from 'wagmi';
-import { RefreshCw, TrendingUp, Calendar, Image as ImageIcon, Users, UserPlus } from 'lucide-react';
+import { RefreshCw, User } from 'lucide-react';
 import ImageUpload from '../components/ImageUpload';
 import PostCard from '../components/PostCard';
 import { getContractService } from '../lib/contract';
 import toast from 'react-hot-toast';
-import Username from '@/components/Username'
+import Username from '@/components/Username';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useReadContract } from 'wagmi';
 import { SOCIAL_GRAPH_CONTRACT } from '@/lib/config3';
@@ -23,7 +23,6 @@ export default function Dashboard() {
   const publicClient = usePublicClient();
   const { data: walletClient } = useWalletClient();
 
-  // Get followers array
   const { data: followersArray } = useReadContract({
     address: SOCIAL_GRAPH_CONTRACT.address,
     abi: SOCIAL_GRAPH_CONTRACT.abi,
@@ -32,7 +31,6 @@ export default function Dashboard() {
     enabled: Boolean(address),
   });
 
-  // Get following array
   const { data: followingArray } = useReadContract({
     address: SOCIAL_GRAPH_CONTRACT.address,
     abi: SOCIAL_GRAPH_CONTRACT.abi,
@@ -41,20 +39,15 @@ export default function Dashboard() {
     enabled: Boolean(address),
   });
 
-  // Calculate counts from arrays
   const followerCount = followersArray?.length || 0;
   const followingCount = followingArray?.length || 0;
 
-  // Initialize contractService using wagmi providers
   useEffect(() => {
     if (isConnected && address && publicClient) {
       try {
-        if (typeof window !== "undefined" && (window.ethereum || publicClient)) {
-          const service = getContractService(publicClient, walletClient);
-          setContractService(service);
-        }
+        const service = getContractService(publicClient, walletClient);
+        setContractService(service);
       } catch (error) {
-        console.error('Contract service initialization failed:', error.message);
         setContractService(null);
       }
     } else {
@@ -63,285 +56,169 @@ export default function Dashboard() {
   }, [isConnected, address, publicClient, walletClient]);
 
   const loadUserPosts = async () => {
-    if (!isConnected || !address || !contractService) {
-      console.log('Skipping post loading - missing requirements:', { 
-        isConnected, 
-        address: !!address, 
-        contractService: !!contractService 
-      });
-      return;
-    }
-  
-    // Prevent double-loading
-    if (loading) {
-      console.log('⏸️ Already loading, skipping...');
-      return;
-    }
-  
+    if (!isConnected || !address || !contractService || loading) return;
+
     setLoading(true);
     try {
-      console.log('🔍 Loading posts for address:', address);
       const posts = await contractService.getUserPosts(address);
-      console.log('📦 Loaded user posts:', posts);
-      console.log('📊 Post count:', posts.length);
-      
-      // Debug each post
-      posts.forEach((post, i) => {
-        console.log(`Post ${i + 1}:`, {
-          id: post.id,
-          isPrivate: post.isPrivate,
-          isDeleted: post.isDeleted
-        });
-      });
-      
-      // Format posts for Synapse - image field contains PieceCID
-      const formattedPosts = posts.map(post => ({
-        ...post,
-        pieceCid: post.image, // normalize name
-        timestamp: post.timestampUnix * 1000
-      }));
-      
-      const sortedPosts = formattedPosts.sort((a, b) => b.timestampUnix - a.timestampUnix);
-      
-      console.log('✅ Setting posts in state:', sortedPosts.length);
-      setUserPosts(sortedPosts);
-  
+      const formatted = posts
+        .filter((p) => !p.isDeleted)
+        .map((p) => ({
+          ...p,
+          pieceCid: p.image,
+          timestamp: p.timestampUnix * 1000,
+        }))
+        .sort((a, b) => b.timestampUnix - a.timestampUnix);
+
+      setUserPosts(formatted);
+
       const totalGlobal = await contractService.getTotalPosts();
       setStats({
-        totalPosts: posts.length,
-        totalGlobal
+        totalPosts: formatted.length,
+        totalGlobal,
       });
-  
-    } catch (error) {
-      console.error('❌ Error loading posts:', error);
-      if (error.message.includes('Unable to fetch user posts')) {
-        toast.error('Unable to load posts with current connection. Try refreshing or reconnecting your wallet.');
-      } else if (!error.message.includes('wallet provider') && !error.message.includes('MetaMask')) {
-        toast.error('Failed to load your posts');
-      }
+    } catch (err) {
+      console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadUserPosts();
+    if (contractService) {
+      loadUserPosts();
+    }
   }, [contractService]);
 
-  const handleUploadSuccess = (result) => {
-    console.log('Upload successful:', result);
-    toast.success('Post created! It may take a moment to appear.');
-    setTimeout(() => {
-      loadUserPosts();
-    }, 2000);
-  };
-
-  const handleRefresh = () => {
-    loadUserPosts();
-    toast.success('Posts refreshed!');
-  };
-
-  // Handle post deletion
   const handleDeletePost = async (postId) => {
-    if (!contractService) {
-      toast.error('Contract service not initialized');
-      return;
-    }
-
-    const loadingToast = toast.loading('Deleting post...');
-    
+    if (!contractService) return;
+    const toastId = toast.loading('Deleting...');
     try {
       const result = await contractService.deletePost(postId);
-      
       if (result.success) {
-        toast.success('Post deleted successfully!', { id: loadingToast });
-        
-        // Remove post from UI
-        setUserPosts(prev => prev.filter(post => post.id !== postId));
-        
-        // Update stats
-        setStats(prev => ({
-          ...prev,
-          totalPosts: prev.totalPosts - 1
-        }));
-      } else {
-        throw new Error('Delete transaction failed');
+        toast.success('Deleted', { id: toastId });
+        setUserPosts((prev) => prev.filter((p) => p.id !== postId));
       }
-    } catch (error) {
-      console.error('Delete post error:', error);
-      
-      let errorMessage = 'Failed to delete post';
-      if (error.message.includes('user rejected')) {
-        errorMessage = 'Transaction cancelled';
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      
-      toast.error(errorMessage, { id: loadingToast });
+    } catch {
+      toast.error('Failed to delete', { id: toastId });
     }
   };
 
-  // Handle privacy toggle
   const handleTogglePrivacy = async (postId, currentPrivacy) => {
-    if (!contractService) {
-      toast.error('Contract service not initialized');
-      return;
-    }
-
+    if (!contractService) return;
     const newPrivacy = !currentPrivacy;
-    const loadingToast = toast.loading(`Making post ${newPrivacy ? 'private' : 'public'}...`);
-    
+    const toastId = toast.loading('Updating...');
     try {
       const result = await contractService.setPostPrivacy(postId, newPrivacy);
-      
       if (result.success) {
-        toast.success(`Post is now ${newPrivacy ? 'private' : 'public'}!`, { id: loadingToast });
-        
-        // Update post in UI
-        setUserPosts(prev => prev.map(post => 
-          post.id === postId 
-            ? { ...post, isPrivate: newPrivacy }
-            : post
-        ));
-      } else {
-        throw new Error('Privacy update transaction failed');
+        toast.success('Updated', { id: toastId });
+        setUserPosts((prev) =>
+          prev.map((p) => (p.id === postId ? { ...p, isPrivate: newPrivacy } : p))
+        );
       }
-    } catch (error) {
-      console.error('Toggle privacy error:', error);
-      
-      let errorMessage = 'Failed to update privacy';
-      if (error.message.includes('user rejected')) {
-        errorMessage = 'Transaction cancelled';
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      
-      toast.error(errorMessage, { id: loadingToast });
+    } catch {
+      toast.error('Failed to update', { id: toastId });
     }
   };
 
   if (!isConnected) {
     return (
-      <div className="min-h-screen flex flex-col justify-center items-center bg-black text-white px-4">
-          <h1 className="text-3xl md:text-4xl font-bold text-center mb-6">Connect your wallet to continue</h1>
-          <ConnectButton />
+      <div className="min-h-[75vh] flex items-center justify-center px-4 py-12">
+        <div className="clean-card p-8 max-w-sm w-full text-center space-y-4">
+          <div className="w-11 h-11 rounded-full bg-zinc-900 border border-zinc-800 text-zinc-300 flex items-center justify-center mx-auto">
+            <User className="w-5 h-5" />
+          </div>
+          <div>
+            <h1 className="text-base font-semibold text-white">Your Arc Dashboard</h1>
+            <p className="text-xs text-zinc-400 mt-1 max-w-xs mx-auto leading-relaxed">
+              Connect your wallet on Arc Mainnet to view your identity, manage followers, and update post privacy.
+            </p>
+          </div>
+          <div className="pt-2 flex justify-center">
+            <ConnectButton chainStatus="none" />
+          </div>
+          <div className="pt-3 border-t border-zinc-800/80 text-[11px] font-mono text-zinc-500">
+            Network: Arc Mainnet (5042)
+          </div>
         </div>
+      </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-black">
-      <div className="container mx-auto px-4 py-8 max-w-2xl">
-        {/* Header */}
-        <Username/>
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">
-            Your Dashboard
-          </h1>
-          {/* <p className="text-gray-400">
-            Manage your posts stored on Filecoin's decentralized network
-          </p> */}
-        </div>
+    <div className="min-h-screen py-8 px-4 max-w-2xl mx-auto">
+      {/* Profile Header */}
+      <Username />
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-[#16030d] outline outline-2 outline-[#39071f] rounded-lg shadow-sm p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-white">My Posts</p>
-                <p className="text-2xl font-bold text-white">{stats.totalPosts}</p>
-              </div>
-              <Calendar className="h-8 w-8 text-pink-200" />
-            </div>
-          </div>
-          <div className="bg-[#16030d] outline outline-2 outline-[#39071f] rounded-lg shadow-sm p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-white">Global Posts</p>
-                <p className="text-2xl font-bold text-white">{stats.totalGlobal}</p>
-              </div>
-              <TrendingUp className="h-8 w-8 text-pink-200" />
-            </div>
-          </div>
-          <button
-            onClick={() => setShowFollowersModal(true)}
-            className="bg-[#16030d] outline outline-2 outline-[#39071f] hover:outline-[#ED3968] rounded-lg shadow-sm p-4 transition-all cursor-pointer text-left"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-white">Followers</p>
-                <p className="text-2xl font-bold text-white">{followerCount}</p>
-              </div>
-              <Users className="h-8 w-8 text-pink-200" />
-            </div>
-          </button>
-          <button
-            onClick={() => setShowFollowingModal(true)}
-            className="bg-[#16030d] outline outline-2 outline-[#39071f] hover:outline-[#ED3968] rounded-lg shadow-sm p-4 transition-all cursor-pointer text-left"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-white">Following</p>
-                <p className="text-2xl font-bold text-white">{followingCount}</p>
-              </div>
-              <UserPlus className="h-8 w-8 text-pink-200" />
-            </div>
-          </button>
+      {/* Subtle Stats Row */}
+      <div className="grid grid-cols-4 gap-2 mb-6">
+        <div className="clean-card p-3 text-center">
+          <span className="text-[11px] text-zinc-500 block">Posts</span>
+          <span className="text-base font-semibold text-white">{stats.totalPosts}</span>
         </div>
-        
-        {/* Upload Component */}
-        <ImageUpload onUploadSuccess={handleUploadSuccess} />
-        
-        {/* Posts Section */}
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-white">
-              My Posts ({userPosts.length})
-            </h2>
-            <button
-              onClick={handleRefresh}
-              disabled={loading || !contractService}
-              className="flex items-center space-x-2 text-[#ED3968] hover:text-rose-100 hover:cursor-pointer text-sm disabled:opacity-50"
-            >
-              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-              <span>{loading ? 'Loading...' : 'Refresh'}</span>
-            </button>
-          </div>
-          
-          {loading && userPosts.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#ED3968] mx-auto mb-4"></div>
-              <p className="text-gray-400">Loading your posts from the blockchain...</p>
-            </div>
-          ) : userPosts.length === 0 ? (
-            <div className="text-center py-12">
-              <ImageIcon className="mx-auto h-16 w-16 text-gray-400 mb-4" />
-              <h3 className="text-lg font-medium text-white mb-2">No posts yet</h3>
-              <p className="text-gray-400 mb-6">
-                Share your first image to get started!
-              </p>
-              <div className="text-sm text-gray-500">
-                Your images will be stored permanently on Filecoin's decentralized network
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {userPosts.map((post) => (
-                <PostCard 
-                  key={`${post.id}-${post.timestampUnix}`} 
-                  post={post} 
-                  showAuthor={false}
-                  isOwner={true}
-                  onDelete={handleDeletePost}
-                  onTogglePrivacy={handleTogglePrivacy}
-                />
-              ))}
-            </div>
-          )}
+        <div className="clean-card p-3 text-center">
+          <span className="text-[11px] text-zinc-500 block">Network</span>
+          <span className="text-base font-semibold text-white">{stats.totalGlobal}</span>
         </div>
+        <button
+          onClick={() => setShowFollowersModal(true)}
+          className="clean-card p-3 text-center hover:bg-zinc-800/50 transition cursor-pointer"
+        >
+          <span className="text-[11px] text-zinc-500 block">Followers</span>
+          <span className="text-base font-semibold text-white">{followerCount}</span>
+        </button>
+        <button
+          onClick={() => setShowFollowingModal(true)}
+          className="clean-card p-3 text-center hover:bg-zinc-800/50 transition cursor-pointer"
+        >
+          <span className="text-[11px] text-zinc-500 block">Following</span>
+          <span className="text-base font-semibold text-white">{followingCount}</span>
+        </button>
       </div>
 
-      {/* Modals */}
+      {/* Upload Component */}
+      <ImageUpload onUploadSuccess={() => loadUserPosts()} />
+
+      {/* Posts Section */}
+      <div className="space-y-4 pt-2">
+        <div className="flex items-center justify-between pb-2 border-b border-zinc-800">
+          <h2 className="text-sm font-semibold text-white">
+            Your Posts ({userPosts.length})
+          </h2>
+          <button
+            onClick={() => loadUserPosts()}
+            disabled={loading}
+            className="flex items-center space-x-1 text-xs text-zinc-400 hover:text-white transition cursor-pointer"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+            <span>Refresh</span>
+          </button>
+        </div>
+
+        {loading && userPosts.length === 0 ? (
+          <div className="py-12 text-center text-xs text-zinc-500">
+            Loading your posts...
+          </div>
+        ) : userPosts.length === 0 ? (
+          <div className="clean-card p-8 text-center text-xs text-zinc-500">
+            No posts yet. Share your first image above.
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {userPosts.map((post) => (
+              <PostCard
+                key={`${post.id}-${post.timestampUnix}`}
+                post={post}
+                showAuthor={false}
+                isOwner={true}
+                onDelete={handleDeletePost}
+                onTogglePrivacy={handleTogglePrivacy}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
       <FollowListModal
         isOpen={showFollowersModal}
         onClose={() => setShowFollowersModal(false)}

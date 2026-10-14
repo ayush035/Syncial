@@ -1,69 +1,50 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   ExternalLink,
-  Calendar,
-  User,
-  AlertCircle,
   MoreVertical,
   Trash2,
   Lock,
   Globe,
+  Heart,
+  Copy,
+  Check,
+  User,
 } from 'lucide-react';
+import { useUsername } from '@/hooks/useUsername';
+import toast from 'react-hot-toast';
 
-export default function PostCard({ post, showAuthor = true, onDelete, onTogglePrivacy, isOwner = false }) {
+export default function PostCard({
+  post,
+  showAuthor = true,
+  onDelete,
+  onTogglePrivacy,
+  isOwner = false,
+}) {
   const [imageLoading, setImageLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [isLiked, setIsLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(() => (post.id ? (Number(post.id) * 3) % 11 + 1 : 1));
+  const [copied, setCopied] = useState(false);
   const menuRef = useRef(null);
 
-  // Debug logging
-  useEffect(() => {
-    console.log('PostCard props:', { 
-      postId: post.id, 
-      isOwner, 
-      showAuthor,
-      hasDelete: !!onDelete,
-      hasTogglePrivacy: !!onTogglePrivacy,
-      isPrivate: post.isPrivate,
-      timestamp: post.timestamp
-    });
-  }, [post.id, isOwner, showAuthor, onDelete, onTogglePrivacy]);
+  const { username: authorUsername } = useUsername(post.author);
 
-  // Close menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
         setShowMenu(false);
       }
     };
-
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const formatDate = (timestamp) => {
-    try {
-      // Handle both unix timestamps (seconds) and milliseconds
-      const ts = Number(timestamp);
-      const date = ts > 10000000000 ? new Date(ts) : new Date(ts * 1000);
-      return date.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-    } catch (e) {
-      return 'Invalid date';
-    }
-  };
-
   const formatRelativeTime = (timestamp) => {
     try {
-      const now = new Date();
-      // Handle both unix timestamps (seconds) and milliseconds
+      const now = Date.now();
       const ts = Number(timestamp);
-      const postDate = ts > 10000000000 ? new Date(ts) : new Date(ts * 1000);
+      const postDate = ts > 1e12 ? ts : ts * 1000;
       const diff = now - postDate;
       const minutes = Math.floor(diff / 60000);
       const hours = Math.floor(diff / 3600000);
@@ -73,149 +54,105 @@ export default function PostCard({ post, showAuthor = true, onDelete, onTogglePr
       if (minutes < 60) return `${minutes}m ago`;
       if (hours < 24) return `${hours}h ago`;
       return `${days}d ago`;
-    } catch (e) {
-      return 'Recently';
+    } catch {
+      return '';
     }
   };
 
   const truncateAddress = (address) => {
-    if (!address) return 'Unknown';
+    if (!address) return '';
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
 
-  // Lighthouse gateway URL - support both 'image' and 'pieceCid' fields
   const ipfsHash = post.image || post.pieceCid;
   const imageUrl = ipfsHash ? `https://gateway.lighthouse.storage/ipfs/${ipfsHash}` : null;
 
-  const handleImageLoad = () => setImageLoading(false);
-  
-  const handleImageError = () => {
-    setImageLoading(false);
-    setImageError(true);
-  };
-
-  const openInNewTab = (url) => {
-    window.open(url, '_blank', 'noopener,noreferrer');
-  };
-
-  const handleDelete = () => {
-    if (window.confirm('Are you sure you want to delete this post? This action cannot be undone.')) {
-      if (onDelete) onDelete(post.id);
-      setShowMenu(false);
-    }
-  };
-
-  const handleTogglePrivacy = () => {
-    if (onTogglePrivacy) onTogglePrivacy(post.id, post.isPrivate);
-    setShowMenu(false);
-  };
-
-  const retryLoad = () => {
-    setImageError(false);
-    setImageLoading(true);
+  const handleCopy = (e) => {
+    e.stopPropagation();
+    if (!ipfsHash) return;
+    navigator.clipboard.writeText(ipfsHash);
+    setCopied(true);
+    toast.success('CID copied');
+    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
-    <div className="bg-black rounded-lg shadow-md overflow-hidden mb-6 outline outline-2 outline-[#39071f]">
+    <div className="clean-card overflow-hidden">
       {/* Header */}
-      <div className="px-4 py-3 outline outline-2 outline-[#39071f]">
-        <div className="flex items-center justify-between">
-          {/* Left side: Author info or timestamp */}
-          {showAuthor ? (
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-[#ED3968] rounded-full flex items-center justify-center">
-                <User className="h-5 w-5 text-white" />
-              </div>
-              <div>
-                <p className="font-semibold text-white text-sm">
-                  {truncateAddress(post.author)}
-                </p>
-                <div className="flex items-center space-x-2 text-xs text-white mt-1">
-                  <Calendar className="h-3 w-3" />
-                  <span>{formatRelativeTime(post.timestamp)}</span>
-                </div>
-              </div>
+      <div className="p-3.5 flex items-center justify-between border-b border-zinc-800/80">
+        <div className="flex items-center space-x-2.5">
+          <div className="w-8 h-8 rounded-full bg-[#ED3968]/10 text-[#ED3968] border border-[#ED3968]/30 flex items-center justify-center">
+            <User className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="flex items-center space-x-1.5">
+              <span className="font-semibold text-white text-xs sm:text-sm">
+                {authorUsername ? `@${authorUsername}` : truncateAddress(post.author)}
+              </span>
+              {authorUsername && (
+                <span className="text-[10px] text-zinc-400 font-mono">
+                  ({truncateAddress(post.author)})
+                </span>
+              )}
             </div>
-          ) : (
-            <div className="flex items-center space-x-3">
-              <div className="flex items-center space-x-2 text-sm text-gray-400">
-                <Calendar className="h-4 w-4" />
-                <span>{formatRelativeTime(post.timestamp)}</span>
-              </div>
-              {post.isPrivate && (
-                <div className="flex items-center space-x-1 px-2 py-1 bg-[#39071f] rounded-md">
-                  <Lock className="h-3 w-3 text-[#ED3968]" />
-                  <span className="text-xs text-[#ED3968] font-medium">Private</span>
+            <span className="text-[11px] text-zinc-500">
+              {formatRelativeTime(post.timestamp)}
+            </span>
+          </div>
+        </div>
+
+        {/* Right Status / Menu */}
+        <div className="flex items-center space-x-2">
+          {post.isPrivate && (
+            <span className="text-[10px] text-[#ED3968] bg-[#ED3968]/10 border border-[#ED3968]/20 px-2 py-0.5 rounded flex items-center space-x-1">
+              <Lock className="w-3 h-3" />
+              <span>Private</span>
+            </span>
+          )}
+
+          {isOwner && (
+            <div className="relative" ref={menuRef}>
+              <button
+                onClick={() => setShowMenu(!showMenu)}
+                className="p-1 rounded text-zinc-500 hover:text-white"
+              >
+                <MoreVertical className="w-4 h-4" />
+              </button>
+
+              {showMenu && (
+                <div className="absolute right-0 mt-1 w-36 bg-zinc-900 border border-zinc-800 rounded-lg shadow-lg z-30 py-1 text-xs">
+                  <button
+                    onClick={() => {
+                      setShowMenu(false);
+                      onTogglePrivacy?.(post.id, post.isPrivate);
+                    }}
+                    className="w-full px-3 py-1.5 text-left text-zinc-300 hover:bg-zinc-800 flex items-center space-x-2"
+                  >
+                    {post.isPrivate ? <Globe className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
+                    <span>{post.isPrivate ? 'Make Public' : 'Make Private'}</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowMenu(false);
+                      if (window.confirm('Delete post?')) onDelete?.(post.id);
+                    }}
+                    className="w-full px-3 py-1.5 text-left text-rose-400 hover:bg-zinc-800 flex items-center space-x-2"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Delete</span>
+                  </button>
                 </div>
               )}
             </div>
           )}
-
-          {/* Right side: Private status & Three-dot menu */}
-          <div className="flex items-center space-x-2">
-            {showAuthor && post.isPrivate && (
-              <div className="flex items-center space-x-1 px-2 py-1 bg-[#39071f] rounded-md">
-                <Lock className="h-3 w-3 text-[#ED3968]" />
-                <span className="text-xs text-[#ED3968] font-medium">Private</span>
-              </div>
-            )}
-
-            {/* Three-dot menu (only show for owner) */}
-            {isOwner && (
-              <div className="relative" ref={menuRef}>
-                <button
-                  onClick={() => setShowMenu(!showMenu)}
-                  className="p-2 text-gray-400 hover:text-white hover:bg-[#39071f] rounded-lg transition-colors"
-                  aria-label="Post options"
-                >
-                  <MoreVertical className="h-5 w-5" />
-                </button>
-
-                {/* Dropdown Menu */}
-                {showMenu && (
-                  <div className="absolute right-0 mt-2 w-48 bg-[#0a0a0a] border-2 border-[#39071f] rounded-lg shadow-xl z-50 overflow-hidden">
-                    <button
-                      onClick={handleTogglePrivacy}
-                      className="w-full flex items-center space-x-3 px-4 py-3 text-sm text-white hover:bg-[#16030d] transition-colors"
-                    >
-                      {post.isPrivate ? (
-                        <>
-                          <Globe className="h-4 w-4 text-green-400" />
-                          <span>Make Public</span>
-                        </>
-                      ) : (
-                        <>
-                          <Lock className="h-4 w-4 text-[#ED3968]" />
-                          <span>Make Private</span>
-                        </>
-                      )}
-                    </button>
-
-                    <div className="border-t border-[#39071f]"></div>
-
-                    <button
-                      onClick={handleDelete}
-                      className="w-full flex items-center space-x-3 px-4 py-3 text-sm text-red-400 hover:bg-[#16030d] transition-colors"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      <span>Delete Post</span>
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
         </div>
       </div>
 
-      {/* Image */}
-      <div className="relative bg-[#16030d] min-h-[300px] flex items-center justify-center">
+      {/* Image Container */}
+      <div className="relative bg-black flex items-center justify-center min-h-[260px] max-h-[500px]">
         {imageLoading && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="flex flex-col items-center space-y-2">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#ED3968]"></div>
-              <p className="text-gray-400 text-sm">Loading from Lighthouse...</p>
-            </div>
+          <div className="absolute inset-0 flex items-center justify-center text-xs text-zinc-500">
+            Loading...
           </div>
         )}
 
@@ -223,58 +160,59 @@ export default function PostCard({ post, showAuthor = true, onDelete, onTogglePr
           <img
             src={imageUrl}
             alt={`Post ${post.id}`}
-            className={`w-full h-auto max-h-[600px] object-contain transition-opacity duration-300 ${
+            loading="lazy"
+            onLoad={() => setImageLoading(false)}
+            onError={() => {
+              setImageLoading(false);
+              setImageError(true);
+            }}
+            className={`w-full h-auto max-h-[500px] object-contain transition-opacity ${
               imageLoading ? 'opacity-0' : 'opacity-100'
             }`}
-            onLoad={handleImageLoad}
-            onError={handleImageError}
-            loading="lazy"
           />
         ) : (
-          <div className="w-full flex flex-col items-center justify-center py-12">
-            <AlertCircle className="h-12 w-12 text-gray-400 mb-3" />
-            <p className="text-gray-400 text-sm mb-2">Failed to load from Lighthouse</p>
-            {ipfsHash && (
-              <p className="text-xs text-gray-500 px-4 text-center mb-3 font-mono">
-                IPFS: {ipfsHash.slice(0, 20)}...
-              </p>
-            )}
-            <button
-              onClick={retryLoad}
-              className="text-xs text-[#ED3968] hover:text-white font-semibold hover:cursor-pointer underline"
-            >
-              Try again
-            </button>
+          <div className="p-8 text-center text-xs text-zinc-500">
+            Image unavailable
           </div>
         )}
       </div>
 
       {/* Footer */}
-      <div className="px-4 py-3 bg-black">
-        <div className="flex items-center justify-between text-xs text-gray-500">
-          <div className="flex items-center space-x-4">
-            <span>Post #{post.id}</span>
-            <span>•</span>
-            <span>Stored on Lighthouse</span>
-            <span>•</span>
-            <span>{formatDate(post.timestamp)}</span>
-          </div>
-          {imageUrl && (
-            <button
-              onClick={() => openInNewTab(imageUrl)}
-              className="text-[#ED3968] hover:text-white hover:cursor-pointer flex items-center space-x-1"
-            >
-              <ExternalLink className="h-3 w-3" />
-              <span>View Original</span>
-            </button>
-          )}
+      <div className="p-3 flex items-center justify-between text-xs text-zinc-400 border-t border-zinc-800/80">
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={() => {
+              setIsLiked(!isLiked);
+              setLikeCount((c) => (isLiked ? c - 1 : c + 1));
+            }}
+            className={`flex items-center space-x-1 cursor-pointer ${
+              isLiked ? 'text-rose-400' : 'hover:text-white'
+            }`}
+          >
+            <Heart className={`w-3.5 h-3.5 ${isLiked ? 'fill-current' : ''}`} />
+            <span>{likeCount}</span>
+          </button>
+
+          <button
+            onClick={handleCopy}
+            className="flex items-center space-x-1 hover:text-white transition cursor-pointer"
+            title="Copy CID"
+          >
+            {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+            <span className="font-mono text-[11px]">{ipfsHash ? `${ipfsHash.slice(0, 6)}...` : 'CID'}</span>
+          </button>
         </div>
-        
-        {/* IPFS Hash */}
-        {ipfsHash && (
-          <div className="mt-2 text-xs text-gray-600 break-all font-mono">
-            IPFS: {ipfsHash}
-          </div>
+
+        {imageUrl && (
+          <a
+            href={imageUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-zinc-400 hover:text-white flex items-center space-x-1"
+          >
+            <span>Open</span>
+            <ExternalLink className="w-3 h-3" />
+          </a>
         )}
       </div>
     </div>

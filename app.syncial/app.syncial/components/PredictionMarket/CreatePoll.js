@@ -1,7 +1,10 @@
 import { useState } from 'react';
 import { PRICE_FEEDS } from '@/lib/config2';
 import { usePredictionMarket } from '../../hooks/usePredictionMarket';
-
+import { AlertCircle } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { useAccount } from 'wagmi';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 
 const CreatePoll = () => {
   const [formData, setFormData] = useState({
@@ -12,170 +15,154 @@ const CreatePoll = () => {
   });
   const [error, setError] = useState('');
 
-  const { handleCreatePoll, loading, hash, isConfirmed } = usePredictionMarket();
+  const { isConnected } = useAccount();
+  const { handleCreatePoll, loading } = usePredictionMarket();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    
-    // Validation
+
     if (!formData.question.trim()) {
       setError('Question is required');
       return;
     }
-    
+
     if (!formData.targetPrice || parseFloat(formData.targetPrice) <= 0) {
-      setError('Please enter a valid target price');
+      setError('Please enter a target price');
       return;
     }
-    
+
+    const toastId = toast.loading('Creating market...');
+
     try {
-      const durationInSeconds = formData.duration * 3600; // Convert hours to seconds
-      // Convert target price to int256 with 8 decimals (Pyth format)
+      const durationInSeconds = formData.duration * 3600;
       const targetPriceWithDecimals = Math.floor(parseFloat(formData.targetPrice) * 1e8);
 
-      console.log('Submitting poll:', {
+      await handleCreatePoll({
         question: formData.question,
         duration: durationInSeconds,
         assetPriceId: formData.assetPriceId,
-        hbarPriceId: PRICE_FEEDS.HBAR_USD,
         targetPrice: targetPriceWithDecimals,
       });
 
-      const txHash = await handleCreatePoll({
-        question: formData.question,
-        duration: durationInSeconds,
-        assetPriceId: formData.assetPriceId,
-        hbarPriceId: PRICE_FEEDS.HBAR_USD,
-        targetPrice: targetPriceWithDecimals,
-      });
-
-      console.log('Poll creation transaction hash:', txHash);
-
-    } catch (error) {
-      console.error('Create poll error:', error);
-      setError(error.message || 'Failed to create poll');
+      toast.success('Market created on Arc!', { id: toastId });
+      setTimeout(() => {
+        window.location.reload();
+      }, 1200);
+    } catch (err) {
+      console.error('Create market error:', err);
+      const msg = err.reason || err.shortMessage || 'Failed to create market';
+      setError(msg);
+      toast.error(msg, { id: toastId });
     }
   };
 
-  // Reset form after successful confirmation
-  if (isConfirmed && hash) {
-    setTimeout(() => {
-      setFormData({
-        question: '',
-        duration: 24,
-        assetPriceId: PRICE_FEEDS.ETH_USD,
-        targetPrice: '',
-      });
-      window.location.reload(); // Refresh to show new poll
-    }, 2000);
-  }
-
   return (
-    <div className="max-w-md mx-auto p-6 bg-[#16030d] outline outline-2 outline-[#39071f] rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-4 mx-18">Create Prediction Poll</h2>
-      
-      {/* Success Message */}
-      {isConfirmed && (
-        <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded">
-          <p className="text-green-800"> Poll created successfully!</p>
-        </div>
-      )}
+    <div className="clean-card p-6 max-w-md mx-auto space-y-4">
+      <div>
+        <h2 className="text-base font-semibold text-white">Create Prediction Market</h2>
+        <p className="text-xs text-zinc-400 mt-0.5">
+          Settled in native Arc USDC with Pyth Oracles
+        </p>
+      </div>
 
-      {/* Transaction Status */}
-      {hash && !isConfirmed && (
-        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
-          <p className="text-yellow-800">⏳ Transaction pending...</p>
-          <p className="text-xs font-mono">{hash}</p>
-        </div>
-      )}
-
-      {/* Error Message */}
       {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded">
-          <p className="text-red-800">{error}</p>
+        <div className="p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs flex items-center space-x-2">
+          <AlertCircle className="w-4 h-4 flex-shrink-0" />
+          <span>{error}</span>
         </div>
       )}
-      
-      <form onSubmit={handleSubmit}>
-        <div className="mb-4">
-          <label className="block text-gray-100 text-sm font-bold mb-2">
-            Question *
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-xs font-medium text-zinc-300 mb-1">
+            Question
           </label>
           <input
             type="text"
             value={formData.question}
-            onChange={(e) => setFormData({...formData, question: e.target.value})}
-            className="w-full px-3 py-2 outline outline-1 outline-white rounded-lg focus:outline-1 focus:outline-[#ED3968]"
-            placeholder="Will ETH reach $3000 by end of week?"
+            onChange={(e) => setFormData({ ...formData, question: e.target.value })}
+            placeholder="e.g. Will ETH reach $3,500 before Friday?"
             required
             disabled={loading}
+            className="w-full bg-zinc-900 border border-zinc-800 focus:border-zinc-500 rounded-lg py-2 px-3 text-sm text-white placeholder-zinc-600 outline-none transition"
           />
         </div>
 
-        <div className="mb-4">
-          <label className="block text-gray-100 text-sm font-bold mb-2">
-            Asset *
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs font-medium text-zinc-300 mb-1">
+              Asset
+            </label>
+            <select
+              value={formData.assetPriceId}
+              onChange={(e) => setFormData({ ...formData, assetPriceId: e.target.value })}
+              disabled={loading}
+              className="w-full bg-zinc-900 border border-zinc-800 focus:border-zinc-500 rounded-lg py-2 px-2 text-xs text-white outline-none transition"
+            >
+              <option value={PRICE_FEEDS.ETH_USD}>ETH / USD</option>
+              <option value={PRICE_FEEDS.BTC_USD}>BTC / USD</option>
+              <option value={PRICE_FEEDS.SOL_USD}>SOL / USD</option>
+              <option value={PRICE_FEEDS.HBAR_USD}>HBAR / USD</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-zinc-300 mb-1">
+              Target Price ($)
+            </label>
+            <input
+              type="number"
+              step="any"
+              min="0.01"
+              value={formData.targetPrice}
+              onChange={(e) => setFormData({ ...formData, targetPrice: e.target.value })}
+              placeholder="3500.00"
+              required
+              disabled={loading}
+              className="w-full bg-zinc-900 border border-zinc-800 focus:border-zinc-500 rounded-lg py-2 px-3 text-xs text-white placeholder-zinc-600 outline-none transition"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium text-zinc-300 mb-1">
+            Duration (Hours)
           </label>
-          <select
-            value={formData.assetPriceId}
-            onChange={(e) => setFormData({...formData, assetPriceId: e.target.value})}
-            className="w-full px-3 py-2 outline outline-1 outline-white rounded-lg focus:outline-1 focus:outline-[#ED3968]"
+          <div className="grid grid-cols-3 gap-2">
+            {[24, 72, 168].map((hours) => (
+              <button
+                key={hours}
+                type="button"
+                onClick={() => setFormData({ ...formData, duration: hours })}
+                className={`py-1.5 rounded-lg text-xs font-medium transition cursor-pointer ${
+                  formData.duration === hours
+                    ? 'bg-zinc-700 text-white'
+                    : 'bg-zinc-900 text-zinc-400 hover:text-white border border-zinc-800'
+                }`}
+              >
+                {hours === 24 ? '24 Hours' : hours === 72 ? '3 Days' : '7 Days'}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {!isConnected ? (
+          <div className="pt-2 flex flex-col items-center gap-2 text-center">
+            <span className="text-[11px] text-zinc-400">
+              Connect your wallet on Arc Mainnet to deploy this market
+            </span>
+            <ConnectButton chainStatus="none" />
+          </div>
+        ) : (
+          <button
+            type="submit"
             disabled={loading}
+            className="w-full py-2.5 btn-primary text-xs disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
           >
-            <option value={PRICE_FEEDS.ETH_USD}>ETH/USD</option>
-            <option value={PRICE_FEEDS.BTC_USD}>BTC/USD</option>
-            <option value={PRICE_FEEDS.SOL_USD}>SOL/USD</option>
-            <option value={PRICE_FEEDS.HBAR_USD}>HBAR/USD</option>
-
-          </select>
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-gray-100 text-sm font-bold mb-2">
-            Target Price (USD) *
-          </label>
-          <input
-            type="number"
-            step="0.01"
-            min="0.01"
-            value={formData.targetPrice}
-            onChange={(e) => setFormData({...formData, targetPrice: e.target.value})}
-            className="w-full px-3 py-2 outline outline-1 outline-white rounded-lg focus:outline-1 focus:outline-[#ED3968]"
-            placeholder="3000.00"
-            required
-            disabled={loading}
-          />
-        </div>
-
-        <div className="mb-6">
-          <label className="block text-gray-100 text-sm font-bold mb-2">
-            Duration (hours) *
-          </label>
-          <input
-            type="number"
-            min="1"
-            max="168" // Max 1 week
-            value={formData.duration}
-            onChange={(e) => setFormData({...formData, duration: parseInt(e.target.value) || 1})}
-            className="w-full px-3 py-2 outline outline-1 outline-white rounded-lg focus:outline-1 focus:outline-[#ED3968]"
-            required
-            disabled={loading}
-          />
-          <p className="text-xs text-gray-100 mt-1">
-            Maximum: 168 hours (1 week)
-          </p>
-        </div>
-
-        <button
-          type="submit"
-          disabled={loading || isConfirmed}
-          className="w-full bg-[#ED3968]  font-bold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        >
-          {loading ? 'Creating Poll...' : 
-           isConfirmed ? '✅ Poll Created!' :
-           'Create Poll'}
-        </button>
+            {loading ? 'Creating...' : 'Create Market'}
+          </button>
+        )}
       </form>
     </div>
   );

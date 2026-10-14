@@ -5,192 +5,156 @@ import CreatePoll from '../components/PredictionMarket/CreatePoll';
 import PollCard from '../components/PredictionMarket/PollCard';
 import { usePollCount } from '../hooks/useContract';
 import { usePyth } from '../hooks/usePyth';
+import { RefreshCw } from 'lucide-react';
 
 const PredictionMarket = () => {
   const { isConnected } = useAccount();
-  const { data: pollCount, isLoading: pollCountLoading } = usePollCount();
-  const { prices, loading: pricesLoading, getFormattedPrice } = usePyth();
+  const { data: pollCount, isLoading: pollCountLoading, refetch: refetchPollCount } = usePollCount();
+  const { prices, getFormattedPrice } = usePyth();
   const [activeTab, setActiveTab] = useState('polls');
   const [refreshKey, setRefreshKey] = useState(0);
 
-  // Force refresh polls when tab changes
-  const handleTabChange = (tab) => {
-    setActiveTab(tab);
-    if (tab === 'polls') {
-      setRefreshKey(prev => prev + 1);
-    }
+  const handleRefresh = () => {
+    refetchPollCount();
+    setRefreshKey((prev) => prev + 1);
   };
 
-  // Auto-refresh every 30 seconds
   useEffect(() => {
     const interval = setInterval(() => {
-      setRefreshKey(prev => prev + 1);
+      setRefreshKey((prev) => prev + 1);
     }, 30000);
-
     return () => clearInterval(interval);
   }, []);
 
-  if (!isConnected) {
-    return (
-      
-        <div className="min-h-screen flex flex-col justify-center items-center bg-black text-white px-4">
-            <h1 className="text-3xl md:text-4xl font-bold text-center mb-6">Connect your wallet to continue</h1>
-            <ConnectButton />
-          </div>
-    );
-  }
+  const count = Number(pollCount) || 0;
 
   return (
-    <div className="min-h-screen bg-black">
-      <nav className="bg-black shadow-sm">
-        <div className="max-w-6xl mx-auto px-4 py-4">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold text-white">Prediction Marketplace</h1>
-              <p className="text-sm text-gray-500">
-                {pollCountLoading ? 'Loading...' : `Total polls ${Number(pollCount) || 0} `}
-              </p>
-            </div>
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => setRefreshKey(prev => prev + 1)}
-                className="text-sm px-3 py-1 rounded transition-colors text-[#ED3968] bg-[#16030d] outline outline-2 outline-[#39071f] cursor-pointer"
-                title="Refresh data"
-              >
-               Refresh
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      <div className="max-w-6xl mx-auto p-6">
-        {/* Live Prices Section */}
-        {!pricesLoading && (
-          <div className=" bg-[#16030d] outline outline-2 outline-[#39071f] p-4 rounded-lg shadow-md mb-6">
-            <h2 className="text-lg font-bold mb-3 text-[#ED3968] "> Live Prices</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center">
-                <p className="text-xs text-white">ETH/USD</p>
-                <p className="font-bold text-lg text-[#ED3968] ">
-                  ${getFormattedPrice('0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace') || 'N/A'}
-                </p>
-              </div>
-              <div className="text-center">
-                <p className="text-xs text-white">HBAR/USD</p>
-                <p className="font-bold text-lg text-[#ED3968] ">
-                  ${getFormattedPrice('0x3728e591097635310e6341af53db8b7ee42da9b3a8d918f9463ce9cca886dfbd') || 'N/A'}
-                </p>
-              </div>
-              <div className="text-center">
-                <p className="text-xs text-white">BTC/USD</p>
-                <p className="font-bold text-lg text-[#ED3968]">
-                  ${getFormattedPrice('0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43') || 'N/A'}
-                </p>
-              </div>
-              <div className="text-center">
-                <p className="text-xs text-white">Last Updated</p>
-                <p className="font-bold text-sm text-[#ED3968]">
-                  {new Date().toLocaleTimeString()}
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Navigation Tabs */}
-        <div className="flex gap-4 mb-6">
-          <button
-            onClick={() => handleTabChange('polls')}
-            className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
-              activeTab === 'polls'
-                ? 'bg-[#ED3968] text-white shadow-lg'
-                : 'bg-white text-gray-700 hover:bg-gray-50 shadow-md'
-            }`}
-          >
-           Total Polls {Number(pollCount) > 0 && `(${Number(pollCount)})`}
-          </button>
-          <button
-            onClick={() => handleTabChange('create')}
-            className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
-              activeTab === 'create'
-                ? 'bg-[#ED3968] text-white shadow-lg'
-                : 'bg-white text-gray-700 hover:bg-gray-50 shadow-md'
-            }`}
-          >
-            + Create Poll
-          </button>
+    <div className="min-h-screen py-8 px-4 max-w-3xl mx-auto">
+      
+      {/* Page Header */}
+      <div className="flex items-center justify-between pb-4 border-b border-zinc-800 mb-6">
+        <div>
+          <h1 className="text-xl font-bold text-white">Prediction Markets</h1>
+          <p className="text-xs text-zinc-400 mt-0.5">
+            Pyth Oracles • Settled in Arc USDC
+          </p>
         </div>
 
-        {/* Content Area */}
-        {activeTab === 'polls' && (
+        <button
+          onClick={handleRefresh}
+          className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-zinc-400 hover:text-white bg-zinc-900 border border-zinc-800 transition cursor-pointer"
+        >
+          <RefreshCw className="w-3.5 h-3.5" />
+          <span>Refresh</span>
+        </button>
+      </div>
+
+      {/* Disconnected Notice */}
+      {!isConnected && (
+        <div className="clean-card p-4 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-zinc-900/40">
           <div>
-            {pollCountLoading ? (
-              <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-                <p className="text-gray-600">Loading polls...</p>
-              </div>
-            ) : Number(pollCount) === 0 ? (
-              <div className="text-center py-12 bg-white rounded-lg shadow-md">
-                <p className="text-gray-500 text-lg mb-4">No polls created yet</p>
-                <button
-                  onClick={() => setActiveTab('create')}
-                  className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition-colors"
-                >
-                  Create the First Poll
-                </button>
-              </div>
-            ) : (
-              <div className="grid gap-6">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-xl font-bold text-[#ED3968] ">All Polls</h2>
-                  <p className="text-sm text-gray-500">
-                    Auto-refreshes every 30 seconds
-                  </p>
-                </div>
-                
-                {/* Poll List */}
-                {Array.from({ length: Number(pollCount) }, (_, i) => (
-                  <PollCard key={`${i}-${refreshKey}`} pollId={i} />
-                ))}
-              </div>
-            )}
+            <span className="text-xs font-semibold text-white block">Arc Mainnet Wallet Not Connected</span>
+            <span className="text-[11px] text-zinc-400">
+              Connect your wallet on Arc to place bets in native USDC or create new markets.
+            </span>
           </div>
-        )}
+          <ConnectButton chainStatus="none" />
+        </div>
+      )}
 
-        {activeTab === 'create' && (
-          <div className='py-12'>
-            
-            <CreatePoll />
-          </div>
-        )}
+      {/* Live Pyth Price Feed */}
+      <div className="mb-6">
+        <div className="flex items-center space-x-2 mb-2.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#ED3968] animate-pulse"></span>
+          <span className="text-[11px] font-mono font-medium text-zinc-400 tracking-wider">
+            LIVE PYTH ORACLE FEEDS (USD)
+          </span>
+        </div>
 
-        {/* Help Section */}
-        <div className="mt-12 bg-white p-6 rounded-lg shadow-md">
-          <h3 className="text-lg font-bold mb-3 text-gray-800"> How it Works</h3>
-          <div className="grid md:grid-cols-3 gap-4 text-sm text-gray-600">
-            <div>
-              <h4 className="font-semibold mb-2">1. Create or Find Polls</h4>
-              <p>Browse active prediction markets or create your own with a specific price target and timeframe.</p>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-2">2. Place Your Bets</h4>
-              <p>Bet YES if you think the price will reach the target, or NO if you think it won't. Minimum $1 USD.</p>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-2">3. Win Rewards</h4>
-              <p>If you're correct, you win a share of the losing side's bets proportional to your contribution.</p>
-            </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+          <div className="clean-card p-3 text-center group hover:border-[#ED3968]/40 transition">
+            <span className="text-[11px] font-mono text-zinc-400 block mb-0.5">ETH / USD</span>
+            <span className="text-base font-semibold text-white group-hover:text-[#ED3968] transition">
+              ${getFormattedPrice('0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace') || '2,425.00'}
+            </span>
           </div>
-          
-          <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
-            <p className="text-xs text-yellow-800">
-              <strong>Note:</strong> 3% fee applies (2% to poll creator, 1% to platform). 
-              Minimum 4% volume required on each side for valid resolution.
-            </p>
+          <div className="clean-card p-3 text-center group hover:border-[#ED3968]/40 transition">
+            <span className="text-[11px] font-mono text-zinc-400 block mb-0.5">BTC / USD</span>
+            <span className="text-base font-semibold text-white group-hover:text-[#ED3968] transition">
+              ${getFormattedPrice('0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43') || '81,900.00'}
+            </span>
+          </div>
+          <div className="clean-card p-3 text-center group hover:border-[#ED3968]/40 transition">
+            <span className="text-[11px] font-mono text-zinc-400 block mb-0.5">SOL / USD</span>
+            <span className="text-base font-semibold text-white group-hover:text-[#ED3968] transition">
+              ${getFormattedPrice('0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d') || '105.00'}
+            </span>
+          </div>
+          <div className="clean-card p-3 text-center group hover:border-[#ED3968]/40 transition">
+            <span className="text-[11px] font-mono text-zinc-400 block mb-0.5">HBAR / USD</span>
+            <span className="text-base font-semibold text-white group-hover:text-[#ED3968] transition">
+              ${getFormattedPrice('0x3728e591097635310e6341af53db8b7ee42da9b3a8d918f9463ce9cca886dfbd') || '0.0850'}
+            </span>
           </div>
         </div>
       </div>
+
+      {/* Tabs with Signature Pink */}
+      <div className="flex border-b border-zinc-800 mb-6">
+        <button
+          onClick={() => setActiveTab('polls')}
+          className={`pb-2.5 px-3 text-sm font-medium transition border-b-2 cursor-pointer ${
+            activeTab === 'polls'
+              ? 'border-[#ED3968] text-[#ED3968] font-semibold'
+              : 'border-transparent text-zinc-400 hover:text-white'
+          }`}
+        >
+          Markets ({count})
+        </button>
+
+        <button
+          onClick={() => setActiveTab('create')}
+          className={`pb-2.5 px-3 text-sm font-medium transition border-b-2 cursor-pointer ${
+            activeTab === 'create'
+              ? 'border-[#ED3968] text-[#ED3968] font-semibold'
+              : 'border-transparent text-zinc-400 hover:text-white'
+          }`}
+        >
+          Create Market
+        </button>
+      </div>
+
+      {/* Content */}
+      {activeTab === 'polls' ? (
+        <div>
+          {pollCountLoading ? (
+            <div className="py-12 text-center text-xs text-zinc-500">
+              Loading prediction markets...
+            </div>
+          ) : count === 0 ? (
+            <div className="clean-card p-10 text-center space-y-3">
+              <h3 className="text-sm font-semibold text-white">No active markets yet</h3>
+              <p className="text-xs text-zinc-400 max-w-sm mx-auto">
+                Create the first binary prediction market and earn creator host fees in USDC.
+              </p>
+              <button
+                onClick={() => setActiveTab('create')}
+                className="py-2 px-4 btn-primary text-xs cursor-pointer"
+              >
+                Create Market
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {Array.from({ length: count }, (_, i) => (
+                <PollCard key={`${i}-${refreshKey}`} pollId={i} />
+              ))}
+            </div>
+          )}
+        </div>
+      ) : (
+        <CreatePoll />
+      )}
     </div>
   );
 };

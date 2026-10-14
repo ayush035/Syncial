@@ -1,494 +1,46 @@
-// pages/feed.js
 import { useEffect, useState } from "react";
 import { usePublicClient } from "wagmi";
 import { ethers } from "ethers";
 import PostCard from "../components/PostCard";
-
-// ✅ Contract details
-const CONTRACT_ADDRESS = "0x92340896008409896Ab983952a8CEAddB82F29B7";
-
-const abi = [
-	{
-		"inputs": [
-			{
-				"internalType": "string",
-				"name": "image",
-				"type": "string"
-			},
-			{
-				"internalType": "bool",
-				"name": "isPrivate",
-				"type": "bool"
-			}
-		],
-		"name": "createPost",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "postId",
-				"type": "uint256"
-			}
-		],
-		"name": "deletePost",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"stateMutability": "nonpayable",
-		"type": "constructor"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "uint256",
-				"name": "id",
-				"type": "uint256"
-			},
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "author",
-				"type": "address"
-			},
-			{
-				"indexed": false,
-				"internalType": "string",
-				"name": "image",
-				"type": "string"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "timestamp",
-				"type": "uint256"
-			},
-			{
-				"indexed": false,
-				"internalType": "bool",
-				"name": "isPrivate",
-				"type": "bool"
-			}
-		],
-		"name": "PostCreated",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "uint256",
-				"name": "id",
-				"type": "uint256"
-			},
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "author",
-				"type": "address"
-			}
-		],
-		"name": "PostDeleted",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "uint256",
-				"name": "id",
-				"type": "uint256"
-			},
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "author",
-				"type": "address"
-			},
-			{
-				"indexed": false,
-				"internalType": "bool",
-				"name": "isPrivate",
-				"type": "bool"
-			}
-		],
-		"name": "PostPrivacyChanged",
-		"type": "event"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "postId",
-				"type": "uint256"
-			},
-			{
-				"internalType": "bool",
-				"name": "isPrivate",
-				"type": "bool"
-			}
-		],
-		"name": "setPostPrivacy",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "getAllPosts",
-		"outputs": [
-			{
-				"components": [
-					{
-						"internalType": "uint256",
-						"name": "id",
-						"type": "uint256"
-					},
-					{
-						"internalType": "address",
-						"name": "author",
-						"type": "address"
-					},
-					{
-						"internalType": "string",
-						"name": "image",
-						"type": "string"
-					},
-					{
-						"internalType": "uint256",
-						"name": "timestamp",
-						"type": "uint256"
-					},
-					{
-						"internalType": "bool",
-						"name": "isPrivate",
-						"type": "bool"
-					},
-					{
-						"internalType": "bool",
-						"name": "isDeleted",
-						"type": "bool"
-					}
-				],
-				"internalType": "struct SocialPosts.Post[]",
-				"name": "",
-				"type": "tuple[]"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "offset",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "count",
-				"type": "uint256"
-			}
-		],
-		"name": "getFeed",
-		"outputs": [
-			{
-				"components": [
-					{
-						"internalType": "uint256",
-						"name": "id",
-						"type": "uint256"
-					},
-					{
-						"internalType": "address",
-						"name": "author",
-						"type": "address"
-					},
-					{
-						"internalType": "string",
-						"name": "image",
-						"type": "string"
-					},
-					{
-						"internalType": "uint256",
-						"name": "timestamp",
-						"type": "uint256"
-					},
-					{
-						"internalType": "bool",
-						"name": "isPrivate",
-						"type": "bool"
-					},
-					{
-						"internalType": "bool",
-						"name": "isDeleted",
-						"type": "bool"
-					}
-				],
-				"internalType": "struct SocialPosts.Post[]",
-				"name": "",
-				"type": "tuple[]"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "getMyPosts",
-		"outputs": [
-			{
-				"components": [
-					{
-						"internalType": "uint256",
-						"name": "id",
-						"type": "uint256"
-					},
-					{
-						"internalType": "address",
-						"name": "author",
-						"type": "address"
-					},
-					{
-						"internalType": "string",
-						"name": "image",
-						"type": "string"
-					},
-					{
-						"internalType": "uint256",
-						"name": "timestamp",
-						"type": "uint256"
-					},
-					{
-						"internalType": "bool",
-						"name": "isPrivate",
-						"type": "bool"
-					},
-					{
-						"internalType": "bool",
-						"name": "isDeleted",
-						"type": "bool"
-					}
-				],
-				"internalType": "struct SocialPosts.Post[]",
-				"name": "",
-				"type": "tuple[]"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "postId",
-				"type": "uint256"
-			}
-		],
-		"name": "getPost",
-		"outputs": [
-			{
-				"components": [
-					{
-						"internalType": "uint256",
-						"name": "id",
-						"type": "uint256"
-					},
-					{
-						"internalType": "address",
-						"name": "author",
-						"type": "address"
-					},
-					{
-						"internalType": "string",
-						"name": "image",
-						"type": "string"
-					},
-					{
-						"internalType": "uint256",
-						"name": "timestamp",
-						"type": "uint256"
-					},
-					{
-						"internalType": "bool",
-						"name": "isPrivate",
-						"type": "bool"
-					},
-					{
-						"internalType": "bool",
-						"name": "isDeleted",
-						"type": "bool"
-					}
-				],
-				"internalType": "struct SocialPosts.Post",
-				"name": "",
-				"type": "tuple"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "user",
-				"type": "address"
-			}
-		],
-		"name": "getUserPosts",
-		"outputs": [
-			{
-				"components": [
-					{
-						"internalType": "uint256",
-						"name": "id",
-						"type": "uint256"
-					},
-					{
-						"internalType": "address",
-						"name": "author",
-						"type": "address"
-					},
-					{
-						"internalType": "string",
-						"name": "image",
-						"type": "string"
-					},
-					{
-						"internalType": "uint256",
-						"name": "timestamp",
-						"type": "uint256"
-					},
-					{
-						"internalType": "bool",
-						"name": "isPrivate",
-						"type": "bool"
-					},
-					{
-						"internalType": "bool",
-						"name": "isDeleted",
-						"type": "bool"
-					}
-				],
-				"internalType": "struct SocialPosts.Post[]",
-				"name": "",
-				"type": "tuple[]"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "postId",
-				"type": "uint256"
-			}
-		],
-		"name": "isPostDeleted",
-		"outputs": [
-			{
-				"internalType": "bool",
-				"name": "",
-				"type": "bool"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "postId",
-				"type": "uint256"
-			}
-		],
-		"name": "isPostPrivate",
-		"outputs": [
-			{
-				"internalType": "bool",
-				"name": "",
-				"type": "bool"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "totalPosts",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "user",
-				"type": "address"
-			}
-		],
-		"name": "totalUserPosts",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	}
-]
+import { CONTRACT_ADDRESS, CONTRACT_ABI } from "@/lib/config";
+import { RefreshCw } from "lucide-react";
+import toast from "react-hot-toast";
 
 export default function FeedPage() {
-  const publicClient = usePublicClient(); 
+  const publicClient = usePublicClient();
   const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadFeed();
-  }, []);
+  }, [publicClient]);
 
   const loadFeed = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
+      let provider;
+      if (publicClient) {
+        provider = new ethers.JsonRpcProvider(
+          publicClient.transport.url || publicClient.chain.rpcUrls.default.http[0]
+        );
+      } else {
+        provider = new ethers.JsonRpcProvider("https://rpc.mainnet.arc.io");
+      }
 
-      // ✅ publicClient gives us a transport
-      const ethersProvider = new ethers.BrowserProvider(publicClient.transport);
-      const contract = new ethers.Contract(CONTRACT_ADDRESS, abi, ethersProvider);
-
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
       const allPosts = await contract.getAllPosts();
-      console.log("Raw posts:", allPosts);
 
-      const formatted = allPosts.map((p) => ({
-        id: Number(p.id),
-        author: p.author,
-        image: p.image,
-        timestamp: Number(p.timestamp) * 1000,
-      }));
+      const formatted = allPosts
+        .filter((p) => !p.isDeleted && !p.isPrivate)
+        .map((p) => ({
+          id: Number(p.id),
+          author: p.author,
+          image: p.image,
+          timestamp: Number(p.timestamp) * 1000,
+          isPrivate: p.isPrivate,
+          isDeleted: p.isDeleted,
+        }))
+        .sort((a, b) => b.timestamp - a.timestamp);
 
       setPosts(formatted);
     } catch (err) {
@@ -499,16 +51,51 @@ export default function FeedPage() {
   };
 
   return (
-    <div className="p-6 max-w-3xl mx-auto">
-      <h1 className="text-3xl font-bold text-white mb-6">Discover </h1>
+    <div className="min-h-screen py-8 px-4 max-w-2xl mx-auto">
+      {/* Header */}
+      <div className="flex items-center justify-between pb-4 border-b border-zinc-800 mb-6">
+        <div>
+          <h1 className="text-xl font-bold text-white">Discover</h1>
+          <p className="text-xs text-zinc-400 mt-0.5">
+            Public feed on Arc Mainnet
+          </p>
+        </div>
 
-      <div className="space-y-4">
-        {posts.length === 0 ? (
-          <p className="text-white">No posts yet.</p>
-        ) : (
-          posts.map((post, index) => <PostCard key={index} post={post} />)
-        )}
+        <button
+          onClick={() => {
+            loadFeed();
+            toast.success("Feed refreshed");
+          }}
+          disabled={loading}
+          className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-zinc-400 hover:text-white bg-zinc-900 border border-zinc-800 transition cursor-pointer"
+        >
+          <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
+          <span>Refresh</span>
+        </button>
       </div>
+
+      {/* Stream */}
+      {loading ? (
+        <div className="py-16 text-center text-xs text-zinc-500">
+          Loading posts...
+        </div>
+      ) : posts.length === 0 ? (
+        <div className="clean-card p-10 text-center space-y-3">
+          <h3 className="text-sm font-semibold text-white">No public posts</h3>
+          <p className="text-xs text-zinc-400 max-w-xs mx-auto">
+            Be the first to share an image to the Syncial network.
+          </p>
+          <a href="/dashboard" className="inline-block py-2 px-4 btn-primary text-xs">
+            Create Post
+          </a>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {posts.map((post) => (
+            <PostCard key={post.id} post={post} showAuthor={true} isOwner={false} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

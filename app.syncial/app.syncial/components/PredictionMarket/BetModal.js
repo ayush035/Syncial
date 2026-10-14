@@ -1,136 +1,101 @@
 import { useState } from 'react';
 import { useAccount, useBalance } from 'wagmi';
-import { parseEther, formatEther } from 'viem';
+import { formatUnits } from 'viem';
 import { usePredictionMarket } from '../../hooks/usePredictionMarket';
+import { X, AlertCircle } from 'lucide-react';
+import toast from 'react-hot-toast';
 
-const BetModal = ({ pollId, onClose, onSuccess }) => {
+const BetModal = ({ pollId, initialOption = true, onClose, onSuccess }) => {
   const { address } = useAccount();
   const { data: balance } = useBalance({ address });
-  const [option, setOption] = useState(true); // true for YES, false for NO
+  const [option, setOption] = useState(initialOption);
   const [amount, setAmount] = useState('');
-  const [error, setError] = useState('');
-  const { handlePlaceBet, loading, hash, isConfirmed } = usePredictionMarket();
+  const [localError, setLocalError] = useState('');
+  
+  const { handlePlaceBet, loading } = usePredictionMarket();
+
+  const formattedBalance = balance
+    ? Number(formatUnits(balance.value, balance.decimals || 6)).toFixed(2)
+    : '0.00';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    
-    // Validation
-    if (!amount || parseFloat(amount) <= 0) {
-      setError('Please enter a valid bet amount');
+    setLocalError('');
+
+    const num = parseFloat(amount);
+    if (!amount || isNaN(num) || num <= 0) {
+      setLocalError('Please enter a valid amount');
       return;
     }
 
-    if (parseFloat(amount) < 1) {
-      setError('Minimum bet is 1 ETH');
+    if (num < 1) {
+      setLocalError('Minimum bet is 1.00 USDC');
       return;
     }
 
-    // Check balance
-    if (balance && parseEther(amount.toString()) > balance.value) {
-      setError(`Insufficient balance. You have ${parseFloat(formatEther(balance.value)).toFixed(4)} ETH`);
+    if (balance && num > Number(formatUnits(balance.value, balance.decimals || 6))) {
+      setLocalError(`Insufficient balance (${formattedBalance} USDC available)`);
       return;
     }
 
     try {
-      console.log('Placing bet:', { pollId, option, amount });
-      const txHash = await handlePlaceBet(pollId, option, parseFloat(amount));
-      console.log('Bet transaction hash:', txHash);
+      const toastId = toast.loading('Submitting bet...');
+      await handlePlaceBet(pollId, option, amount);
+      toast.success('Bet placed on Arc!', { id: toastId });
+      setTimeout(() => onSuccess?.(), 1000);
     } catch (err) {
-      console.error('Bet placement error:', err);
-      
-      // Handle specific error messages
-      let errorMessage = 'Failed to place bet: ';
-      if (err.message.includes('Poll ended')) {
-        errorMessage += 'This poll has ended and no longer accepts bets.';
-      } else if (err.message.includes('Bet below $1')) {
-        errorMessage += 'Minimum bet is $1 USD equivalent in ETH.';
-      } else if (err.message.includes('insufficient funds')) {
-        errorMessage += 'Insufficient ETH balance for this bet plus gas fees.';
-      } else if (err.message.includes('User rejected')) {
-        errorMessage += 'Transaction was cancelled.';
-      } else if (err.message.includes('gas')) {
-        errorMessage += 'Transaction failed due to gas estimation. Try a smaller amount.';
-      } else {
-        errorMessage += err.reason || err.message;
-      }
-      
-      setError(errorMessage);
+      console.error('Bet error:', err);
+      const msg = err.reason || err.shortMessage || 'Transaction failed';
+      setLocalError(msg);
+      toast.error(msg);
     }
   };
 
-  // Handle successful transaction
-  if (isConfirmed && hash) {
-    setTimeout(() => {
-      onSuccess?.();
-    }, 1000);
-  }
-
   return (
-    <div className="fixed inset-0 bg-[#16030d] bg-opacity-10  flex items-center justify-center z-50">
-      <div className="bg-[#16030d] outline outline-2 outline-[#39071f] p-6 rounded-lg max-w-md w-full mx-4 max-h-96 overflow-y-auto">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-xl font-bold">Place Your Bet</h3>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+      <div className="bg-[#121215] border border-zinc-800 rounded-2xl max-w-sm w-full p-5 shadow-xl space-y-4">
+        
+        {/* Header */}
+        <div className="flex justify-between items-center pb-3 border-b border-zinc-800">
+          <div>
+            <h3 className="text-base font-semibold text-white">Place Bet</h3>
+            <p className="text-xs text-zinc-400">Poll #{pollId} • Arc Mainnet</p>
+          </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
-            disabled={loading}
+            className="p-1 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition"
           >
-            ✕
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Balance Display */}
-        {balance && (
-          <div className="mb-4 p-2 rounded">
-            <p className="text-xs text-gray-100">
-              Available: {parseFloat(formatEther(balance.value)).toFixed(4)} ETH
-            </p>
+        <div className="flex justify-between items-center text-xs text-zinc-400 px-1">
+          <span>Available balance</span>
+          <span className="font-semibold text-white">{formattedBalance} USDC</span>
+        </div>
+
+        {localError && (
+          <div className="p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs flex items-center space-x-2">
+            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+            <span>{localError}</span>
           </div>
         )}
 
-        {/* Transaction Status */}
-        {hash && !isConfirmed && (
-          <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
-            <p className="text-yellow-800 text-sm"> Transaction pending...</p>
-            <p className="text-xs font-mono text-yellow-600">{hash}</p>
-          </div>
-        )}
-
-        {/* Success Message */}
-        {isConfirmed && hash && (
-          <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded">
-            <p className="text-green-800 text-sm">Bet placed successfully!</p>
-          </div>
-        )}
-
-        {/* Error Message */}
-        {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded">
-            <p className="text-red-800 text-sm">{error}</p>
-            <button
-              onClick={() => setError('')}
-              className="text-xs text-red-600 hover:text-red-800 mt-1"
-            >
-              Dismiss
-            </button>
-          </div>
-        )}
-        
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label className="block text-white text-sm font-bold mb-2">
-              Your Prediction
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Option Selector */}
+          <div>
+            <label className="block text-xs font-medium text-zinc-300 mb-1.5">
+              Prediction Outcome
             </label>
-            <div className="flex gap-2">
+            <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={() => setOption(true)}
-                disabled={loading || isConfirmed}
-                className={`flex-1 py-3 px-4 rounded font-semibold transition-colors disabled:opacity-50 ${
+                className={`py-2 rounded-lg text-xs font-semibold transition cursor-pointer ${
                   option
-                    ? 'bg-[#ED3968] text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-300'
+                    ? 'bg-emerald-500 text-white'
+                    : 'bg-zinc-800/80 text-zinc-400 hover:text-white'
                 }`}
               >
                 YES
@@ -138,11 +103,10 @@ const BetModal = ({ pollId, onClose, onSuccess }) => {
               <button
                 type="button"
                 onClick={() => setOption(false)}
-                disabled={loading || isConfirmed}
-                className={`flex-1 py-3 px-4 rounded font-semibold transition-colors disabled:opacity-50 ${
+                className={`py-2 rounded-lg text-xs font-semibold transition cursor-pointer ${
                   !option
                     ? 'bg-[#ED3968] text-white'
-                    : ' bg-white text-black hover:bg-gray-300'
+                    : 'bg-zinc-800/80 text-zinc-400 hover:text-white'
                 }`}
               >
                 NO
@@ -150,77 +114,73 @@ const BetModal = ({ pollId, onClose, onSuccess }) => {
             </div>
           </div>
 
-          <div className="mb-6">
-            <label className="block text-white text-sm font-bold mb-2">
-              Amount (ETH)
-            </label>
+          {/* Amount Input */}
+          <div>
+            <div className="flex justify-between items-center mb-1">
+              <label className="text-xs font-medium text-zinc-300">Amount</label>
+              <span className="text-[11px] text-zinc-500">Min 1.00 USDC</span>
+            </div>
             <div className="relative">
               <input
                 type="number"
-                step="0.5"
-                min="0.0001"
-                max={balance ? formatEther(balance.value) : undefined}
+                step="any"
+                min="1"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-[#ED3968] pr-16"
-                placeholder="6"
-                required
-                disabled={loading || isConfirmed}
+                placeholder="10"
+                disabled={loading}
+                className="w-full bg-zinc-900 border border-zinc-800 focus:border-zinc-500 rounded-lg py-2 pl-3 pr-14 text-sm text-white placeholder-zinc-600 outline-none transition"
               />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-zinc-400">
+                USDC
+              </span>
+            </div>
+
+            {/* Quick chips */}
+            <div className="flex gap-1.5 mt-2">
+              {['1', '5', '10', '25'].map((val) => (
+                <button
+                  key={val}
+                  type="button"
+                  onClick={() => setAmount(val)}
+                  className="flex-1 py-1 rounded bg-zinc-800/60 hover:bg-zinc-800 text-[11px] text-zinc-300 transition cursor-pointer"
+                >
+                  ${val}
+                </button>
+              ))}
               <button
                 type="button"
                 onClick={() => {
                   if (balance) {
-                    const maxAmount = Math.max(0, parseFloat(formatEther(balance.value)) - 0.0000001); // Leave some for gas
-                    setAmount(maxAmount.toFixed(4));
+                    const max = Math.max(0, Number(formatUnits(balance.value, balance.decimals || 6)) - 0.05);
+                    setAmount(max.toFixed(2));
                   }
                 }}
-                disabled={loading || isConfirmed || !balance}
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-xs  text-[#ED3968] hover:text-rose-400 px-2 py-1 rounded disabled:opacity-50  cursor-pointer"
+                className="px-2 py-1 rounded bg-zinc-800/60 hover:bg-zinc-800 text-[11px] font-semibold text-white transition cursor-pointer"
               >
                 MAX
               </button>
             </div>
-            <div className="flex justify-between text-xs text-gray-100 mt-1">
-              <span>Minimum: 0.001 ETH</span>
-              <span>~0.001 ETH minimum</span>
-            </div>
           </div>
 
-          <div className="flex gap-2">
+          {/* Submit */}
+          <div className="flex gap-2 pt-1">
             <button
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="flex-1 bg-white hover:bg-[#ED3968] hover:text-white disabled:bg-gray-300 text-black cursor-pointer font-bold py-2 px-4 rounded transition-colors"
+              className="flex-1 py-2 btn-secondary text-xs cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
-              disabled={loading || !amount || isConfirmed}
-              className="flex-1 bg-[#ED3968] hover:bg-rose-400 cursor-pointer disabled:bg-rose-400 text-white font-bold py-2 px-4 rounded transition-colors"
+              disabled={loading || !amount || parseFloat(amount) <= 0}
+              className="flex-1 py-2 btn-primary text-xs disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
             >
-              {loading ? 'Processing...' : 
-               isConfirmed ? '✅ Success!' :
-               `Bet ${option ? 'YES' : 'NO'}`}
+              {loading ? 'Confirming...' : `Stake ${amount ? `${amount} USDC` : ''}`}
             </button>
           </div>
-
-          {/* Bet Summary */}
-          {amount && (
-            <div className="mt-4 p-3 bg-blue-50 rounded border">
-              <p className="text-sm font-semibold text-blue-800">Bet Summary:</p>
-              <p className="text-xs text-blue-700">
-                Betting {amount} ETH on <strong>{option ? 'YES' : 'NO'}</strong>
-              </p>
-              {balance && (
-                <p className="text-xs text-blue-600">
-                  Remaining balance: ~{(parseFloat(formatEther(balance.value)) - parseFloat(amount) - 0.01).toFixed(4)} ETH
-                </p>
-              )}
-            </div>
-          )}
         </form>
       </div>
     </div>

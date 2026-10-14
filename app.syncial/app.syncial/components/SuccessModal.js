@@ -1,29 +1,40 @@
-import { motion } from 'framer-motion';
+import Link from 'next/link';
+import { X, Check } from 'lucide-react';
 
-
-
-export default function SuccessModal({ onClose }) {
-    return (
-      <div className="fixed inset-0 z-50  bg-opacity-100  backdrop-blur-md flex items-center justify-center">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="  text-white rounded-2xl p-10 max-w-lg mx-auto shadow-xl text-center"
+export default function SuccessModal({ onClose, username }) {
+  return (
+    <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="clean-card p-6 max-w-sm w-full mx-auto shadow-xl text-center space-y-4 relative">
+        <button
+          onClick={onClose}
+          className="absolute top-3 right-3 p-1 rounded-lg text-zinc-500 hover:text-white"
         >
-          <h1 className="text-4xl font-bold text-rose-100 mb-4">Congratulations 🎉</h1>
-          <h2 className="text-3xl font-bold text-[#ED3968] mb-4">Welcome to Syncial Family!</h2>
-          <p className="text-lg text-rose-100 mb-6">
-            You are now onboarded and ready to post bangers! <br /> We're rolling out exciting features so keep an eye on our socials!
-          </p>
-          <button
-            onClick={onClose}
-            className="px-6 py-2  hover:bg-rose-500 rounded-full text-white font-semibold transition"
-          >
-            x
-          </button>
-        </motion.div>
-      </div>
-    );
-  }
+          <X className="w-4 h-4" />
+        </button>
 
-  
+        <div className="w-10 h-10 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center mx-auto">
+          <Check className="w-5 h-5" />
+        </div>
+
+        <div>
+          <h2 className="text-base font-semibold text-white">
+            Username Registered
+          </h2>
+          <p className="text-xs text-zinc-400 mt-1">
+            <span className="text-[#ED3968] font-semibold">@{username}</span> is now linked to your address on Arc Mainnet.
+          </p>
+        </div>
+
+        <div className="pt-1">
+          <Link
+            href="/dashboard"
+            onClick={onClose}
+            className="w-full py-2.5 px-4 btn-primary text-xs flex items-center justify-center"
+          >
+            Go to Dashboard
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}

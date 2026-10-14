@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { useAccount, useWalletClient, usePublicClient } from 'wagmi';
-import { Upload, X, Image as ImageIcon, Lock, Globe } from 'lucide-react';
+import { Upload, X, Lock, Globe } from 'lucide-react';
 import lighthouse from '@lighthouse-web3/sdk';
 import { getContractService } from '@/lib/contract';
 import toast from 'react-hot-toast';
 
-const LIGHTHOUSE_API_KEY = "6456139b.ae52e2f7b68e4b459ded2bd267a5df4e"; // 🔑 Replace with env variable later
+const LIGHTHOUSE_API_KEY = process.env.NEXT_PUBLIC_LIGHTHOUSE_API_KEY || "6456139b.ae52e2f7b68e4b459ded2bd267a5df4e";
 
 export default function ImageUpload({ onUploadSuccess }) {
   const [uploading, setUploading] = useState(false);
@@ -16,277 +16,131 @@ export default function ImageUpload({ onUploadSuccess }) {
   const { data: walletClient } = useWalletClient();
   const publicClient = usePublicClient();
 
-  // Handle file selection
   const handleFileSelect = (file) => {
     if (file && file.type.startsWith('image/')) {
-      if (file.size > 10 * 1024 * 1024) { // 10MB limit
+      if (file.size > 10 * 1024 * 1024) {
         toast.error('File size must be less than 10MB');
         return;
       }
       setSelectedFile(file);
     } else {
-      toast.error('Please select a valid image file');
+      toast.error('Please select an image file');
     }
   };
 
-  // Handle drag and drop
-  const handleDrag = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true);
-    } else if (e.type === "dragleave") {
-      setDragActive(false);
-    }
-  };
-
-  const handleDrop = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-    
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleFileSelect(e.dataTransfer.files[0]);
-    }
-  };
-
-  // Upload workflow with Lighthouse
   const uploadPost = async () => {
-    if (!selectedFile || !address) {
-      toast.error('Please select a file and ensure wallet is connected');
-      return;
-    }
-  
-    if (!publicClient) {
-      toast.error('Wallet connection not ready. Please try again.');
-      return;
-    }
-  
+    if (!selectedFile || !address) return;
     setUploading(true);
-    const loadingToast = toast.loading('Preparing upload...');
-  
+    const toastId = toast.loading('Uploading to IPFS...');
+
     try {
-      // Step 1: Upload image to Lighthouse
-      toast.loading('Uploading image to Lighthouse...', { id: loadingToast });
-      console.log('Starting upload for file:', selectedFile.name);
-  
-      // Try the updated SDK method signature
       const uploadResponse = await lighthouse.upload(
         [selectedFile],
         LIGHTHOUSE_API_KEY
       );
-  
-      console.log('Lighthouse upload result:', uploadResponse);
-  
-      // Handle different response formats
+
       const ipfsHash = uploadResponse.data?.Hash || uploadResponse.Hash;
-      
       if (!ipfsHash) {
-        throw new Error('No IPFS hash returned from Lighthouse');
+        throw new Error('No IPFS hash returned');
       }
-  
-      const gatewayUrl = `https://gateway.lighthouse.storage/ipfs/${ipfsHash}`;
-  
-      // Step 2: Call contract with IPFS hash and privacy setting
-      toast.loading('Creating post on blockchain...', { id: loadingToast });
+
+      toast.loading('Publishing to Arc...', { id: toastId });
       const contractService = getContractService(publicClient, walletClient);
-      
-      // Pass isPrivate parameter to createPost
-      const contractResult = await contractService.createPost(ipfsHash, isPrivate);
-  
-      console.log('Contract transaction successful:', contractResult);
-  
-      if (contractResult.success) {
-        toast.success(`Post created successfully! ${isPrivate ? '(Private)' : '(Public)'}`, { id: loadingToast });
-        
+      const result = await contractService.createPost(ipfsHash, isPrivate);
+
+      if (result.success) {
+        toast.success('Post published!', { id: toastId });
         setSelectedFile(null);
-        setIsPrivate(false); // Reset privacy toggle
-  
-        if (onUploadSuccess) {
-          onUploadSuccess({
-            ipfsHash,
-            gatewayUrl,
-            contractTx: contractResult.hash,
-            postCreated: true,
-            isPrivate
-          });
-        }
+        setIsPrivate(false);
+        onUploadSuccess?.();
       } else {
         throw new Error('Transaction failed');
       }
-  
     } catch (error) {
-      console.error('Upload failed:', error);
-      console.error('Error details:', error.response?.data || error.message);
-  
-      let errorMessage = 'Upload failed';
-      
-      // Check for specific Lighthouse errors
-      if (error.response?.status === 400) {
-        errorMessage = 'Invalid upload request. Please check your API key or try a different file.';
-      } else if (error.response?.status === 401 || error.response?.status === 403) {
-        errorMessage = 'API key is invalid or expired. Please generate a new one.';
-      } else if (error.response?.status === 429) {
-        errorMessage = 'Rate limit exceeded. Please wait and try again.';
-      } else if (error.message.includes('wallet provider')) {
-        errorMessage = 'Wallet connection issue. Please reconnect and try again.';
-      } else if (error.message.includes('user rejected')) {
-        errorMessage = 'Transaction cancelled by user';
-      } else if (error.message) {
-        errorMessage = `Upload failed: ${error.message}`;
-      }
-  
-      toast.error(errorMessage, { id: loadingToast });
+      console.error('Upload error:', error);
+      toast.error(error.shortMessage || error.message || 'Upload failed', { id: toastId });
     } finally {
       setUploading(false);
     }
   };
 
-  const removeFile = () => {
-    setSelectedFile(null);
-    setIsPrivate(false); // Reset when removing file
-  };
-
-  if (!isConnected) {
-    return (
-      <div className="bg-[#16030d] outline outline-2 outline-[#39071f] rounded-lg shadow-md p-6 mb-6">
-        <div className="text-center">
-          <ImageIcon className="mx-auto h-12 w-12 text-gray-400" />
-          <h3 className="mt-2 text-sm font-medium text-white">Connect Wallet</h3>
-          <p className="mt-1 text-sm text-gray-400">
-            Connect your wallet to start sharing images
-          </p>
-        </div>
-      </div>
-    );
-  }
+  if (!isConnected) return null;
 
   return (
-    <div className="bg-[#16030d] outline outline-2 outline-[#39071f] rounded-lg shadow-md p-6 mb-6">
-      <h2 className="text-xl font-bold mb-4 flex items-center text-white">
-        <Upload className="mr-2 h-5 w-5" />
-        Create New Post
-      </h2>
-      
-      <div className="space-y-4">
-        {!selectedFile ? (
-          <div
-            className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
-              dragActive 
-                ? 'border-blue-500 bg-[#ED3968]' 
-                : 'border-rose-100 hover:border-[#ED3968]'
-            }`}
-            onDragEnter={handleDrag}
-            onDragLeave={handleDrag}
-            onDragOver={handleDrag}
-            onDrop={handleDrop}
-          >
-            <ImageIcon className="mx-auto h-12 w-12 text-gray-400" />
-            <div className="mt-4">
-              <label htmlFor="file-upload" className="cursor-pointer">
-                <span className="mt-2 block text-sm font-medium text-rose-100">
-                  Drop an image here, or click to select
-                </span>
-                <span className="mt-1 block text-xs text-rose-100">
-                  PNG, JPG, GIF up to 10MB
-                </span>
-              </label>
-              <input
-                id="file-upload"
-                type="file"
-                className="sr-only"
-                accept="image/*"
-                onChange={(e) => e.target.files[0] && handleFileSelect(e.target.files[0])}
-              />
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <div className="relative">
-              <div className="relative rounded-lg overflow-hidden">
-                <img
-                  src={URL.createObjectURL(selectedFile)}
-                  alt="Preview"
-                  className="w-full h-64 object-cover"
-                />
-                <button
-                  onClick={removeFile}
-                  className="absolute top-2 right-2 p-1 bg-red-600 text-white rounded-full hover:bg-red-700"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-              <div className="mt-2 text-sm text-gray-400">
-                <p className="font-medium">{selectedFile.name}</p>
-                <p>{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</p>
-              </div>
-            </div>
+    <div className="clean-card p-4 sm:p-5 mb-6 space-y-3">
+      <div className="flex items-center justify-between">
+        <h2 className="text-sm font-semibold text-white">New Post</h2>
+        <span className="text-xs text-zinc-500 font-mono">Arc • IPFS</span>
+      </div>
 
-            {/* Privacy Toggle */}
-            <div className="bg-[#0a0a0a] border border-[#39071f] rounded-lg p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  {isPrivate ? (
-                    <Lock className="h-5 w-5 text-[#ED3968]" />
-                  ) : (
-                    <Globe className="h-5 w-5 text-green-400" />
-                  )}
-                  <div>
-                    <p className="text-sm font-medium text-white">
-                      {isPrivate ? 'Private Post' : 'Public Post'}
-                    </p>
-                    <p className="text-xs text-gray-400">
-                      {isPrivate 
-                        ? 'Only you can see this post' 
-                        : 'Everyone can see this post'}
-                    </p>
-                  </div>
-                </div>
-                
-                {/* Toggle Switch */}
-                <button
-                  onClick={() => setIsPrivate(!isPrivate)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#ED3968] focus:ring-offset-2 focus:ring-offset-[#16030d] ${
-                    isPrivate ? 'bg-[#ED3968]' : 'bg-gray-600'
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      isPrivate ? 'translate-x-6' : 'translate-x-1'
-                    }`}
-                  />
-                </button>
-              </div>
-            </div>
+      {!selectedFile ? (
+        <div
+          className={`border border-dashed rounded-xl p-6 text-center transition cursor-pointer ${
+            dragActive
+              ? 'border-[#ED3968] bg-[#ED3968]/5'
+              : 'border-zinc-800 hover:border-[#ED3968]/40 bg-zinc-900/30'
+          }`}
+          onDragEnter={(e) => { e.preventDefault(); setDragActive(true); }}
+          onDragLeave={(e) => { e.preventDefault(); setDragActive(false); }}
+          onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
+          onDrop={(e) => {
+            e.preventDefault();
+            setDragActive(false);
+            if (e.dataTransfer.files?.[0]) handleFileSelect(e.dataTransfer.files[0]);
+          }}
+        >
+          <label htmlFor="file-upload" className="cursor-pointer block text-xs text-zinc-400">
+            <span>Drag & drop an image or <span className="text-[#ED3968] font-medium underline">browse</span></span>
+            <span className="block text-[11px] text-zinc-500 mt-1">PNG, JPG, WebP up to 10MB</span>
+          </label>
+          <input
+            id="file-upload"
+            type="file"
+            className="sr-only"
+            accept="image/*"
+            onChange={(e) => e.target.files?.[0] && handleFileSelect(e.target.files[0])}
+          />
+        </div>
+      ) : (
+        <div className="space-y-3">
+          <div className="relative rounded-lg overflow-hidden bg-black max-h-60 flex items-center justify-center">
+            <img
+              src={URL.createObjectURL(selectedFile)}
+              alt="Preview"
+              className="max-h-60 w-auto object-contain"
+            />
+            <button
+              onClick={() => setSelectedFile(null)}
+              className="absolute top-2 right-2 p-1 rounded-md bg-zinc-900/80 text-white hover:bg-zinc-800"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
-        )}
 
-        {selectedFile && (
+          <div className="flex items-center justify-between text-xs text-zinc-400 p-2 rounded-lg bg-zinc-900/60 border border-zinc-800/80">
+            <div className="flex items-center space-x-1.5">
+              {isPrivate ? <Lock className="w-3.5 h-3.5 text-zinc-300" /> : <Globe className="w-3.5 h-3.5 text-zinc-300" />}
+              <span>{isPrivate ? 'Private post' : 'Public post'}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsPrivate(!isPrivate)}
+              className="text-xs text-white hover:underline cursor-pointer"
+            >
+              Switch to {isPrivate ? 'Public' : 'Private'}
+            </button>
+          </div>
+
           <button
             onClick={uploadPost}
-            disabled={uploading || !publicClient}
-            className="w-full bg-[#ED3968] text-white py-3 px-4 rounded-lg hover:bg-rose-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+            disabled={uploading}
+            className="w-full py-2 btn-primary text-xs disabled:opacity-40 cursor-pointer flex items-center justify-center space-x-1.5"
           >
-            {uploading ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                <span>Uploading...</span>
-              </>
-            ) : (
-              <>
-                <Upload className="h-4 w-4" />
-                <span>Share to Blockchain</span>
-              </>
-            )}
+            <Upload className="w-3.5 h-3.5" />
+            <span>{uploading ? 'Publishing...' : 'Publish Post'}</span>
           </button>
-        )}
-        
-        {selectedFile && !uploading && (
-          <div className="text-xs text-gray-500 text-center">
-            Your image will be stored on <span className="text-[#ED3968]">Lighthouse</span> and linked to your wallet
-          </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

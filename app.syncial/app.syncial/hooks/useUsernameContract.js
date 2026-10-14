@@ -1,7 +1,6 @@
-// hooks/useUsernameContract.js
-import { useReadContract } from 'wagmi';
+import { USERNAME_CONTRACT } from '@/lib/username_congif';
 
-const USERNAME_CONTRACT_ADDRESS = '0x075139B060F0B076fA27620196dCbFE791e9C80A'; // Replace with your actual address
+const USERNAME_CONTRACT_ADDRESS = USERNAME_CONTRACT.address;
 
 const USERNAME_ABI = [
   {

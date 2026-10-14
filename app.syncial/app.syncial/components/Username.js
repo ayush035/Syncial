@@ -2,21 +2,10 @@
 import { useEffect, useState } from "react";
 import { useAccount, useWalletClient } from "wagmi";
 import { ethers } from "ethers";
-import Navbar from "../components/Navbar"; // adjust path if needed
+import { USERNAME_CONTRACT } from "@/lib/username_congif";
 
-// 0G Galileo Testnet contract details
-const CONTRACT_ADDRESS = "0x075139B060F0B076fA27620196dCbFE791e9C80A";
-const ABI = [
-  {
-    inputs: [{ internalType: "address", name: "_wallet", type: "address" }],
-    name: "checkUsernameFromRainbow",
-    outputs: [{ internalType: "string", name: "", type: "string" }],
-    stateMutability: "view",
-    type: "function",
-  },
-];
+const PUBLIC_RPC = "https://rpc.mainnet.arc.io";
 
-// Public RPC endpoint for 0G Galileo Testnet
 export default function Profile() {
   const { address } = useAccount();
   const { data: walletClient } = useWalletClient();
@@ -26,6 +15,8 @@ export default function Profile() {
   useEffect(() => {
     if (address) {
       resolveUsername(address);
+    } else {
+      setUsername("");
     }
   }, [address, walletClient]);
 
@@ -33,41 +24,43 @@ export default function Profile() {
     setLoading(true);
     try {
       let provider;
-
       if (walletClient) {
-        // ✅ use wagmi wallet client (works for desktop + mobile)
         provider = new ethers.BrowserProvider(walletClient.transport);
       } else {
-        // ✅ fallback to public RPC if no wallet connected
         provider = new ethers.JsonRpcProvider(PUBLIC_RPC);
       }
 
-      const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, provider);
-      const resolvedUsername = await contract.checkUsernameFromRainbow(walletAddress);
-
-      setUsername(resolvedUsername);
-    } catch (err) {
-      console.error("Error resolving username:", err);
+      const contract = new ethers.Contract(USERNAME_CONTRACT.address, USERNAME_CONTRACT.abi, provider);
+      const resolved = await contract.checkUsernameFromRainbow(walletAddress);
+      setUsername(resolved || "");
+    } catch {
       setUsername("");
     } finally {
       setLoading(false);
     }
   };
 
+  const shortAddress = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : '';
+
   return (
-    <>
-      <div className="my-8">
-        <h1 className="text-[#ED3968] font-semibold text-lg">GM,</h1>
-        {loading ? (
-          <p>Loading your username...</p>
-        ) : username ? (
-          <div className="text-[#ED3968] text-5xl font-bold font-sans">
-            {username} 👋
-          </div>
-        ) : (
-          <p className="text-white">No username found. Please mint one!</p>
+    <div className="flex items-center justify-between pb-6 border-b border-zinc-800 mb-6">
+      <div>
+        <div className="flex items-center space-x-2">
+          <h1 className="text-xl font-bold text-white">
+            GM, <span className="text-[#ED3968]">{loading ? "..." : username ? `@${username}` : (shortAddress || "Connected Wallet")}</span>
+          </h1>
+          {username && (
+            <span className="text-[11px] text-[#ED3968] bg-[#ED3968]/10 border border-[#ED3968]/20 px-2 py-0.5 rounded">
+              Verified
+            </span>
+          )}
+        </div>
+        {address && (
+          <p className="text-xs font-mono text-zinc-500 mt-0.5">
+            {address}
+          </p>
         )}
       </div>
-    </>
+    </div>
   );
 }

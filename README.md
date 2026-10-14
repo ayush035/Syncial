@@ -70,11 +70,11 @@ The code configuration is not, by itself, proof of a successful deployment. Comp
 | Live application URL | FILL IN |
 | Public repository | https://github.com/ayush035/Syncial |
 | Deployed network and chain ID | FILL IN: confirm against the actual network |
-| Username contract and explorer link | FILL IN |
-| Social posts contract and explorer link | FILL IN |
+| UsernameMinting (Identity) | `0x0Eb52b91AaEdac88F7f7fCE6FAa7a6B4B4AA952C`<br>Deployment tx: `0x9c7439a325d79beede0f94488365ccd71b978faac21bdf64d521031e8c4cb5bd` |
+| SocialPosts (Feed and Privacy) | `0x24D3e95A1d27ff796FbF8a8cD3121f220F0b8C26`<br>Deployment tx: `0x6e23497da8122a723b649d37a6fcc7808a582a5c0f742fa2ed304a0dc3bb5750` |
 | Social graph contract and explorer link | FILL IN |
-| Prediction marketplace contract and explorer link | FILL IN |
-| Example successful transaction | FILL IN |
+| ArcPredictionMarketplace (USDC-native) | `0xCB35bbf1a3633161092bD324383E9667bAb529C9`<br>Deployment tx: `0x469a16fbc06aa21d7c1551b35edfa80a38df112d1827dbfb7296f58a5f4be747` |
+| Example successful transaction | Any deployment tx above; add a user-action tx (post, mint, stake) if available |
 | Demo video or walkthrough | FILL IN |
 
 Confirm the deployed bytecode, configured addresses, USDC denomination and oracle integration against the chosen network before presenting them as live.
@@ -153,18 +153,18 @@ Wallet connection settings, contract addresses, chain definitions and price feed
 
 ```text
 Syncial/
-âââ README.md
-âââ LICENSE
-âââ app.syncial/app.syncial/
-    âââ pages/          # Home, discover, dashboard and predictions
-    âââ components/     # Identity, posts, uploads and social UI
-    âââ hooks/          # Wallet and contract integration
-    âââ contracts/      # Username, posts and prediction Solidity source
-    âââ lib/            # Chain settings, addresses, ABIs and USDC helpers
-    âââ abi/            # Additional contract interfaces
-    âââ public/         # Images and static assets
-    âââ styles/         # Global styling
-    âââ package.json
+├── README.md
+├── LICENSE
+└── app.syncial/app.syncial/
+    ├── pages/          # Home, discover, dashboard and predictions
+    ├── components/     # Identity, posts, uploads and social UI
+    ├── hooks/          # Wallet and contract integration
+    ├── contracts/      # Username, posts and prediction Solidity source
+    ├── lib/            # Chain settings, addresses, ABIs and USDC helpers
+    ├── abi/            # Additional contract interfaces
+    ├── public/         # Images and static assets
+    ├── styles/         # Global styling
+    └── package.json
 ```
 
 ## Build status and scope

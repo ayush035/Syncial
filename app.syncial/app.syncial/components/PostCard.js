@@ -64,15 +64,30 @@ export default function PostCard({
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
 
-  const ipfsHash = post.image || post.pieceCid;
-  const imageUrl = ipfsHash ? `https://gateway.lighthouse.storage/ipfs/${ipfsHash}` : null;
+  const rawImage = post.image || post.pieceCid;
+  const isDirectUrl = Boolean(
+    rawImage && (rawImage.startsWith('http://') || rawImage.startsWith('https://') || rawImage.startsWith('/'))
+  );
+
+  const gateways = rawImage && !isDirectUrl ? [
+    `https://gateway.lighthouse.storage/ipfs/${rawImage}`,
+    `https://ipfs.io/ipfs/${rawImage}`,
+    `https://cf-ipfs.com/ipfs/${rawImage}`,
+  ] : [];
+
+  const [gatewayIdx, setGatewayIdx] = useState(0);
+  const imageUrl = rawImage
+    ? isDirectUrl
+      ? rawImage
+      : (gateways[gatewayIdx] || gateways[0])
+    : null;
 
   const handleCopy = (e) => {
     e.stopPropagation();
-    if (!ipfsHash) return;
-    navigator.clipboard.writeText(ipfsHash);
+    if (!rawImage) return;
+    navigator.clipboard.writeText(rawImage);
     setCopied(true);
-    toast.success('CID copied');
+    toast.success('Hash copied');
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -163,8 +178,12 @@ export default function PostCard({
             loading="lazy"
             onLoad={() => setImageLoading(false)}
             onError={() => {
-              setImageLoading(false);
-              setImageError(true);
+              if (!isDirectUrl && gatewayIdx < gateways.length - 1) {
+                setGatewayIdx(prev => prev + 1);
+              } else {
+                setImageLoading(false);
+                setImageError(true);
+              }
             }}
             className={`w-full h-auto max-h-[500px] object-contain transition-opacity ${
               imageLoading ? 'opacity-0' : 'opacity-100'
